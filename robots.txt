@@ -1,4 +1,0 @@
-User-agent:*
-Disallow:
-
-Sitemap: https://nodalityjs.github.io/sitemap.xml
