@@ -1,0 +1,38 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+/* For homepage titles */
+.hero__title {
+  padding: 20px; /* Add padding around the title */
+}
+
+/* For other titles */
+h1, h2, h3, h4, h5, h6,p {
+  padding-left: 15px; /* Adjust padding above titles */
+ 
+}
+
+h2 {
+  margin-top: 2rem;
+}
+
+
+.heroBanner {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 2rem;
+  }
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
