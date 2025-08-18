@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunknodality=self.webpackChunknodality||[]).push([[8121],{8070:a=>{a.exports=JSON.parse('{"tags":[{"label":"nodality","permalink":"/blog/tags/nodality","count":1},{"label":"ui","permalink":"/blog/tags/ui","count":1},{"label":"declarative","permalink":"/blog/tags/declarative","count":1}]}')}}]);
