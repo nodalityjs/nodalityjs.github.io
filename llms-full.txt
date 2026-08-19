@@ -6752,6 +6752,64 @@ separates a chain from several unrelated morphs sharing a page.
 
 `chain` wins outright: node-level `from`/`to` are not read beside it.
 
+## A complete page you can paste
+
+Everything above is a fragment. This is the whole thing: one file, no build
+step, no install. Save it as `index.html`, open it, and the nav transitions.
+
+```html
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Morph nav</title></head>
+<body>
+  <div id="mount"></div>
+
+  <script type="module">
+    import { Des } from "https://www.unpkg.com/nodality@1.2.5/dist/index.esm.js";
+
+    // Each destination is an ordinary element with an id. The id is what the
+    // morph node points at, and the back button is what unwinds the path.
+    const view = (id, heading, body) => ({
+      id, type: "wrap", background: "#eef2f6", radius: "14px",
+      children: [
+        { id: id + "-h",    type: "h3",     text: heading },
+        { id: id + "-p",    type: "p",      text: body },
+        { id: id + "-back", type: "button", text: "\u2190 back" },
+      ],
+    });
+
+    const E = [
+      { id: "topnav", type: "nav" },
+      view("about",   "About",    "Who we are."),
+      view("offer",   "Services", "What we do."),
+      view("contact", "Contact",  "How to reach us."),
+    ];
+
+    const N = [
+      { op: "morph", from: "topnav",
+        to: { About: "about", Services: "offer", Contact: "contact" },
+        effect: "t-vhs", duration: 620, back: true },
+    ];
+
+    new Des().nodes(N).add(E).set({ mount: "#mount", code: false });
+  </script>
+</body>
+</html>
+```
+
+Two things in there are easy to get wrong, and both cost a silent no-op rather
+than an error.
+
+The **keys of `to` are the labels the nav actually renders**, not names you
+choose. `{ type: "nav" }` renders About, Services and Contact, so those are the
+keys. Change the nav and the keys change with it; use a label that is not on
+screen and that edge simply never fires. If you would rather not depend on the
+text, address the links by position instead: `to: ["about", "offer", "contact"]`.
+
+The **back button is an ordinary element inside the view**, not a feature you
+switch on. `back: true` on the node gives the controller a history to unwind;
+a control has to exist for someone to unwind it with.
+
 ## `back` is history, not an edge
 
 With `back: true` the destination's own button returns to wherever you
