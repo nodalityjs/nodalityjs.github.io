@@ -1,0 +1,122 @@
+# Nodality
+
+> A JavaScript UI library. You describe a page as two plain arrays — `elements`
+> (what to render) and `nodes` (how it looks and behaves) — and pass them to a
+> `Des` instance, which builds the DOM.
+
+Elements take `text`, not `value`. `value` means something else: a keyframe
+value, or the name of an animated property.
+
+## api
+
+- [Button](https://nodalityjs.github.io/docs/api/button): `button.js`
+- [Center](https://nodalityjs.github.io/docs/api/center): `center.js`
+- [FlexGrid](https://nodalityjs.github.io/docs/api/flexgrid): `flex-grid.js`
+- [FlexRow](https://nodalityjs.github.io/docs/api/flexrow): `flex-row.js`
+- [Image](https://nodalityjs.github.io/docs/api/image): `image.js`
+- [Link](https://nodalityjs.github.io/docs/api/link): `link.js`
+- [Picker](https://nodalityjs.github.io/docs/api/picker): `picker.js`
+- [Text](https://nodalityjs.github.io/docs/api/text): `text.js`
+- [TextField](https://nodalityjs.github.io/docs/api/textfield): `text-field.js`
+- [UList](https://nodalityjs.github.io/docs/api/ulist): `ulist.js`
+- [Wrapper](https://nodalityjs.github.io/docs/api/wrapper): `container.js`
+
+## basics
+
+- [Basics](https://nodalityjs.github.io/docs/basics/README): This library employs an unique approach to building static websites using declarative UI components and nodes that will style them.
+- [Animation](https://nodalityjs.github.io/docs/basics/animation): Create striking animations using JS responsive API.
+- [CDN](https://nodalityjs.github.io/docs/basics/cdn): To use Nodality with CDN, use this code:
+- [Custom elements](https://nodalityjs.github.io/docs/basics/customElements): To create a custom element using Nodality library, you extend the  class.
+- [Designer](https://nodalityjs.github.io/docs/basics/designer): Designer instance accepts nodes and elements arrays.
+- [Nodes](https://nodalityjs.github.io/docs/basics/nodes): Nodes allow you to simply you to modify the elements.
+- [Getting started](https://nodalityjs.github.io/docs/basics/start): This library works with *elements* represented as an array of HTML entities, and *nodes* that control the behavior of elements.
+
+## elements
+
+- [Card](https://nodalityjs.github.io/docs/elements/cards): Create  elements containing ,  and  elements.
+- [Circle](https://nodalityjs.github.io/docs/elements/circle): You can use the  element to display a simple circle.
+- [Code](https://nodalityjs.github.io/docs/elements/code): You can use the  element to display a block of code.
+- [Dropdown](https://nodalityjs.github.io/docs/elements/dropdown): Dropdown is used to create expand area upon click or hover.
+- [Free](https://nodalityjs.github.io/docs/elements/free): Create free alement to use in conjuction with [Layout](/library/nodes/layout) node.
+- [AreaGrid](https://nodalityjs.github.io/docs/elements/grid): The `grid` creates an instance of the `AreaGrid` element, designed to organize child elements in a grid layout.
+- [HScroller](https://nodalityjs.github.io/docs/elements/hscroller): You can use the  to make a horizontally scrolling gallery.
+- [Image](https://nodalityjs.github.io/docs/elements/image): Image allows you to create simple image
+- [Keyset](https://nodalityjs.github.io/docs/elements/keyset): Keyset allows you to set custom CSS properties on elements.
+- [Link](https://nodalityjs.github.io/docs/elements/link): To create a simple link use the following element.
+- [Modal](https://nodalityjs.github.io/docs/elements/modal): To create a simple modal.
+- [Navigation](https://nodalityjs.github.io/docs/elements/navigation): To create a simple navigation use  element
+- [Offcanvas](https://nodalityjs.github.io/docs/elements/offcanvas): To create a simple navigation use  element.
+- [Polygon](https://nodalityjs.github.io/docs/elements/polygon): You can use the  element to display a block of code.
+- [Elements](https://nodalityjs.github.io/docs/elements/readme): Elements are used to create UI.
+- [Responsive wrapper](https://nodalityjs.github.io/docs/elements/responsive-wrapper): The `Wrapper` class allows you to create a responsive element that can dynamically switch its layout between row and column orientations based on specified brea
+- [Complex](https://nodalityjs.github.io/docs/elements/responsive): The `Wrapper` class allows you to create a responsive element that can dynamically switch its layout between row and column orientations based on specified brea
+- [Row](https://nodalityjs.github.io/docs/elements/row): Row creates a simple  element to allow you to organise children in a row.
+- [SideNavigation](https://nodalityjs.github.io/docs/elements/sidenavigation): To create side navigation use the  structure.
+- [Slider](https://nodalityjs.github.io/docs/elements/slider): To create a simple slider, use  structure
+- [Stack](https://nodalityjs.github.io/docs/elements/stack): To create a simple stack, use  object.
+- [Switcher](https://nodalityjs.github.io/docs/elements/switcher): Switcher allows you to display different views at different breakpoints.
+- [Table](https://nodalityjs.github.io/docs/elements/table): To create a simple modal.
+- [Text](https://nodalityjs.github.io/docs/elements/text): Headers are used to display text.
+- [UList](https://nodalityjs.github.io/docs/elements/ulist): You can use the  element to display a list of items.
+- [WeightLayout](https://nodalityjs.github.io/docs/elements/weightLayout): WeightLayout allows you to create flexible layout using attraction weights inside  element.
+- [Wrap](https://nodalityjs.github.io/docs/elements/wrap): Creates a simple wrapper that wraps other elements.
+- [ZoomCard](https://nodalityjs.github.io/docs/elements/zoom-card): To use image as background for the entire card use the  element with a background.
+
+## forms
+
+- [Button](https://nodalityjs.github.io/docs/forms/button): Creates a simple button.
+- [Checkbox](https://nodalityjs.github.io/docs/forms/checkbox): A checkbox is used to to select a single option, akin to answering yes or no.
+- [Complex form](https://nodalityjs.github.io/docs/forms/complex-form): In this example, the complete form will be shown.
+- [FilePicker](https://nodalityjs.github.io/docs/forms/filepicker): Creates a simple filepicker.
+- [LabelField](https://nodalityjs.github.io/docs/forms/labelfield): LabelField allows you to create textfield that turns placeholder text into a label.
+- [Picker](https://nodalityjs.github.io/docs/forms/picker): To create the picker, use the the  delcaration in the elements array.
+- [Radio](https://nodalityjs.github.io/docs/forms/radio): The `radio` element creates a group of radio buttons for user selection.
+- [Basics](https://nodalityjs.github.io/docs/forms/readme): You can create forms easily with this library.
+- [TextField](https://nodalityjs.github.io/docs/forms/textfield): To create a simple textfield, use the  element.
+- [Usage with PHP](https://nodalityjs.github.io/docs/forms/usewithphp): You can use the form with PHP.
+
+## guides
+
+- [Guides](https://nodalityjs.github.io/docs/guides/README): Guides provide simple cookbooks.
+- [Deploy](https://nodalityjs.github.io/docs/guides/deploy): To deploy your project, first create new Nodality application by running the following command:
+- [Integration](https://nodalityjs.github.io/docs/guides/integration): You can easily integrate this library with React.js and Vue.js libraries.
+- [Testing](https://nodalityjs.github.io/docs/guides/testing): Nodality uses Playwright for testing.
+- [Tooling](https://nodalityjs.github.io/docs/guides/tooling): Create Nodality package allows you to quickly bootstrap a new Nodality application.
+- [Transitions](https://nodalityjs.github.io/docs/guides/transitions): This library supports the **CSS View Transition API** to enable smooth animations when navigating between pages.\
+
+## nodes
+
+- [Animation](https://nodalityjs.github.io/docs/nodes/animation): Animation allows you to animate elements.
+- [Blast](https://nodalityjs.github.io/docs/nodes/blast): Blast allows user to create outline around element contents.
+- [Copy](https://nodalityjs.github.io/docs/nodes/copy): To use the copy operation, we use these nodes:
+- [Filter](https://nodalityjs.github.io/docs/nodes/filter): To use the filter, we use this:
+- [Gradient](https://nodalityjs.github.io/docs/nodes/gradient): To add gradient to an element, use the following object:
+- [Layout](https://nodalityjs.github.io/docs/nodes/layout): To quickly generate common layout variation, we can use the following:
+- [LinkStyle](https://nodalityjs.github.io/docs/nodes/linkStyle): Link style operation allows you to style links ( elements.).
+- [Nodes](https://nodalityjs.github.io/docs/nodes/nodes): Nodes allow you to edit design of the elements.
+- [Nodes](https://nodalityjs.github.io/docs/nodes/readme): Nodes modify beahaviour of the elements.
+- [Shadow](https://nodalityjs.github.io/docs/nodes/shadow): To use the default shadow, we use the  op.
+- [Span](https://nodalityjs.github.io/docs/nodes/span): Span is a part of text that can have different contents and design from the rest of your text.
+- [Transform](https://nodalityjs.github.io/docs/nodes/transform): To use the filter, we use this node:
+
+## raster
+
+- [Agent surface — the page, as tools](https://nodalityjs.github.io/docs/raster/agent-surface): An `agent-surface` node lets an AI agent operate the page: move between
+- [Raster basics](https://nodalityjs.github.io/docs/raster/basics): Raster ops run your element through a WebGL shader.
+- [Composing a pipeline](https://nodalityjs.github.io/docs/raster/composition): A chain is not a list of passes.
+- [Morph — transitions as nodes](https://nodalityjs.github.io/docs/raster/morph): A morph node describes which element *becomes* which, and on what
+- [Raster ops](https://nodalityjs.github.io/docs/raster/ops): Every node has an `op` and a set of options.
+
+## scrollanimation
+
+- [Basics](https://nodalityjs.github.io/docs/scrollanimation/basics): To create smooth scroll animations you can use the following:
+- [Scroll Animation](https://nodalityjs.github.io/docs/scrollanimation/index): Create engaging scroll animation
+- [ScrollVideo](https://nodalityjs.github.io/docs/scrollanimation/scrollvideo): Play video as you scroll.
+- [Together](https://nodalityjs.github.io/docs/scrollanimation/together): Here is how you can combine the elements using the  element.
+- [TransformAnimation](https://nodalityjs.github.io/docs/scrollanimation/transformanimation): Transform element as you scroll down.
+
+## ssg
+
+- [Prerender API](https://nodalityjs.github.io/docs/ssg/api): The CLI covers the common case.
+- [Prerendering](https://nodalityjs.github.io/docs/ssg/prerender): Nodality builds your page in the browser.
+
