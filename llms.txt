@@ -101,10 +101,10 @@ value, or the name of an animated property.
 
 ## raster
 
-- [Agent surface — the page, as tools](https://nodalityjs.github.io/docs/raster/agent-surface): An `agent-surface` node lets an AI agent operate the page: move between morph views, submit a form you have allowed, and read what is on screen.
+- [Agent surface – the page, as tools](https://nodalityjs.github.io/docs/raster/agent-surface): An `agent-surface` node lets an AI agent operate the page: move between morph views, submit a form you have allowed, and read what is on screen.
 - [Raster basics](https://nodalityjs.github.io/docs/raster/basics): Raster ops run your element through a WebGL shader.
 - [Composing a pipeline](https://nodalityjs.github.io/docs/raster/composition): A chain is not a list of passes.
-- [Morph — transitions as nodes](https://nodalityjs.github.io/docs/raster/morph): A morph node describes which element *becomes* which, and on what interaction.
+- [Morph – transitions as nodes](https://nodalityjs.github.io/docs/raster/morph): A morph node describes which element *becomes* which, and on what interaction.
 - [Raster ops](https://nodalityjs.github.io/docs/raster/ops): Every node has an `op` and a set of options.
 
 ## scrollanimation

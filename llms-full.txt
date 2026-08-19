@@ -6055,9 +6055,9 @@ new Text("Single shadow").set({
 ```
 You can also specify the following shadow properties:
 
-* ```movements``` — array with horizontal and vertical movement of the shadow  
+* ```movements``` – array with horizontal and vertical movement of the shadow  
 (offsetX is movements[0]  and offsetY is movements[1])
-* ```radius```  — blur amount of the shadow
+* ```radius```  – blur amount of the shadow
 
 ```js
 new Text("Shadow with movements").set({
@@ -6321,15 +6321,15 @@ You can use the following properties and their CSS equivalent.
 
 ---
 
-# Agent surface — the page, as tools
+# Agent surface – the page, as tools
 
 Path: /docs/raster/agent-surface
 
-# Agent surface — the page, as tools
+# Agent surface – the page, as tools
 
 An `agent-surface` node lets an AI agent operate the page: move between
 morph views, submit a form you have allowed, and read what is on screen.
-Nothing is authored twice — the tools are **derived** from the same
+Nothing is authored twice – the tools are **derived** from the same
 `(E, N)` pair that renders the page.
 
 ```js
@@ -6358,13 +6358,13 @@ No node, no surface. Turning a page's interaction structure into
 callable tools is the page's decision, and upgrading the library never
 makes it for you. The same goes for forms: **no form is exposed unless
 you name it in `forms`**, because a derived submit tool is an agent
-*acting* — the one derived capability with a real side effect.
+*acting* – the one derived capability with a real side effect.
 
 ## What each tool does
 
 **`navigate`** takes a `destination` from an enum of the views your
 graph can reach. These are in-page views reached by a transition, not
-separate URLs — Nodality has no router, and between pages an agent
+separate URLs – Nodality has no router, and between pages an agent
 already has links. Execution goes through the controller's own
 `goToState`, so an agent's traversal is the user's traversal and
 inherits the same rules.
@@ -6380,7 +6380,7 @@ string with an email format, a `picker`'s `items` become an enum, a
 property.
 
 **`read_view`** returns the content currently on screen as structured
-text — headings, body copy, and the labels of anything actionable.
+text – headings, body copy, and the labels of anything actionable.
 
 ## Errors are repair reports
 
@@ -6408,7 +6408,7 @@ The declaration and the live registration come from one derivation, so
 they cannot disagree.
 
 Note that only the **root** view of a morph chain is in the prerendered
-HTML — the other states are held until they are transitioned to. Put a
+HTML – the other states are held until they are transitioned to. Put a
 form you want annotated at build time outside the graph.
 
 ## Fields
@@ -6422,7 +6422,7 @@ form you want annotated at build time outside the graph.
 ## Browser support
 
 Tool registration uses the WebMCP browser API, which is a W3C Community
-Group draft in origin trial — available in Chrome behind
+Group draft in origin trial – available in Chrome behind
 `chrome://flags/#enable-webmcp-testing` and in Edge behind a flag. Where
 it is absent nothing registers, nothing warns, and your page behaves
 identically. The manifest is written either way.
@@ -6438,7 +6438,7 @@ Path: /docs/raster/basics
 
 Raster ops run your element through a WebGL shader. Unlike CSS filters they
 can read neighbouring pixels, so they can halftone, dither, warp and
-displace — and they can be driven by the pointer, scroll or time.
+displace – and they can be driven by the pointer, scroll or time.
 
 A pipeline is a plain array of nodes. It is data, not calls:
 
@@ -6486,7 +6486,7 @@ You can opt a single node out of the live path:
 
 The distinction matters more than it sounds. Bugs that only appear in live
 mode are common, because that is the only mode where the children leave the
-host — if a host centres its child with flex, the child has to keep that
+host – if a host centres its child with flex, the child has to keep that
 centring after the move. Test both.
 
 ## The host needs a real box
@@ -6508,7 +6508,7 @@ new Link("Open the app", "/app").set({ raster })
 
 State the height too, not just the width. In live mode the pipeline moves
 the children into a div sized from the measured box, and a fractional
-content height gets pinned a pixel short — enough to clip the bottom of a
+content height gets pinned a pixel short – enough to clip the bottom of a
 rounded button.
 
 ## Elements that cannot host a pipeline
@@ -6548,7 +6548,7 @@ So this:
 [ { op: "duotone", colors: [...] }, { op: "offset", strength: 10 } ]
 ```
 
-behaves the same as the reverse — `offset` is a warp and runs first either
+behaves the same as the reverse – `offset` is a warp and runs first either
 way. Order matters *within* a stage, not across stages.
 
 Because everything is emitted into a single shader, a chain costs one pass
@@ -6574,7 +6574,7 @@ defaults to `"mask"`, so `masked: true` reads the unnamed one:
   { op: "dither", levels: 4, masked: true } ]
 ```
 
-A field producer on its own renders nothing — if you see no change, check
+A field producer on its own renders nothing – if you see no change, check
 that something downstream actually consumes it.
 
 ## merge: two branches from one source
@@ -6589,7 +6589,7 @@ neither branch sees the other:
   b: [ { op: "duotone", colors: ["#0b1b2b", "#e6e9ed"] } ] }
 ```
 
-`mix` fades the whole merge back toward branch A — `mix: 0` is A alone,
+`mix` fades the whole merge back toward branch A – `mix: 0` is A alone,
 `mix: 1` the full blend.
 
 `mode` is one of:
@@ -6603,7 +6603,7 @@ interpolated plainly, because "screen" means nothing for a displacement.
 
 The shader work is emitted inline, so a merge costs no extra pass, no extra
 framebuffer and no second capture of the DOM. For exactly that reason it
-**cannot give the branches different source content** — both start from the
+**cannot give the branches different source content** – both start from the
 same pixels. If you need two different sources, you need two elements.
 
 **Use a chain** when each step should build on the last. **Use a merge**
@@ -6638,7 +6638,7 @@ aliases:
 | `light` | `(prefers-color-scheme: light)` |
 
 A predicate that throws resolves to `false`. Switches nest, up to a depth of
-8 — sub-chains are plain data and could be shared by reference, so the cap
+8 – sub-chains are plain data and could be shared by reference, so the cap
 is a cycle guard.
 
 `reduced-motion` deserves a mention on its own: the expensive, moving ops
@@ -6682,18 +6682,18 @@ import { DRIVER_NAMES } from "nodality"; // static mouse hover scroll time
 ```
 
 `by` chooses what moves the effect, and `radius` sets how far its influence
-reaches. `static` applies the effect evenly and never animates — useful when
+reaches. `static` applies the effect evenly and never animates – useful when
 you want the look without the interaction, and the cheapest option since
 nothing needs re-uploading per frame.
 
 
 ---
 
-# Morph — transitions as nodes
+# Morph – transitions as nodes
 
 Path: /docs/raster/morph
 
-# Morph — transitions as nodes
+# Morph – transitions as nodes
 
 A morph node describes which element *becomes* which, and on what
 interaction. Everything else in `N` says how an element looks; this says
@@ -6714,8 +6714,8 @@ transition stays serialisable data alongside the rest of the pair.
 `from` is the element that morphs. `to` takes two forms:
 
 ```js
-to: { About: "about", Contact: "contact" }   // by LABEL — the link text decides
-to: ["about", "contact"]                     // by POSITION — link i goes to i
+to: { About: "about", Contact: "contact" }   // by LABEL – the link text decides
+to: ["about", "contact"]                     // by POSITION – link i goes to i
 ```
 
 Prefer labels. A responsive navbar renders a different set of links at
@@ -6723,7 +6723,7 @@ different breakpoints, so the *n*-th link is not the same link at two
 window widths, and a positional mapping quietly sends the wrong link to
 the wrong destination on one of them.
 
-Ids may be written bare or in selector form — `"work"` and `"#work"`
+Ids may be written bare or in selector form – `"work"` and `"#work"`
 mean the same element.
 
 ## A chain: one node, a whole graph
@@ -6742,7 +6742,7 @@ describes a navigation graph:
 
 The entries are **edges, not keyframes**. Entry two does not happen
 after entry one; it is reachable *from* the state entry one lands on. So
-they carry no ordinal — array order is already order, and a number would
+they carry no ordinal – array order is already order, and a number would
 claim a sequence the graph does not have.
 
 Settings written on the node are defaults every edge inherits and any
@@ -6755,7 +6755,7 @@ separates a chain from several unrelated morphs sharing a page.
 ## `back` is history, not an edge
 
 With `back: true` the destination's own button returns to wherever you
-came from — the reverse fold over the path actually traversed, not a
+came from – the reverse fold over the path actually traversed, not a
 lookup in the edge list. From `aurora` the graph above offers a forward
 route to `contact`, but back returns to `work`, because that is the way
 you came. It is the rule every browser has already taught your users.
@@ -6784,7 +6784,7 @@ Every one of these may also be written per edge inside `chain`.
 By default a morph uses the **snapshot** backend: both ends are captured
 as stills and the shader samples the two. A transition gains nothing
 from live upload while paying its costs, so `live: true` is an explicit
-opt-in — and it is a request, not a guarantee. Where HTML-in-Canvas is
+opt-in – and it is a request, not a guarantee. Where HTML-in-Canvas is
 unavailable the pipeline falls back to snapshot on its own and the page
 behaves as it did before.
 
@@ -7306,8 +7306,8 @@ Path: /docs/ssg/api
 # Prerender API
 
 The CLI covers the common case. When you need to drive rendering from your own
-build script — a different template per page, a computed output path, content
-fetched before the render — import `prerender` directly.
+build script – a different template per page, a computed output path, content
+fetched before the render – import `prerender` directly.
 
 ```js
 import { prerender } from "nodality/ssg";
@@ -7334,17 +7334,17 @@ function. The rest have defaults.
 
 | Option | Default | Meaning |
 |---|---|---|
-| `template` | — | HTML shell to render into. Required |
-| `output` | — | Where to write the result. Required |
-| `build` | — | Async function that constructs the page. Required |
+| `template` | – | HTML shell to render into. Required |
+| `output` | – | Where to write the result. Required |
+| `build` | – | Async function that constructs the page. Required |
 | `mount` | `"#mount"` | Selector the rendered tree replaces |
 | `url` | `"http://localhost/"` | Document URL seen by the page |
 | `viewport` | `{ width: 390, height: 844 }` | Size reported to responsive code |
-| `locale` | — | Locale for this render |
+| `locale` | – | Locale for this render |
 | `localStorageKey` | `"h7lang"` | Key the page reads its locale from |
-| `htmlLang` | — | `lang` attribute on `<html>` |
-| `canonical` | — | Canonical URL for this page |
-| `alternates` | — | `hreflang` alternates |
+| `htmlLang` | – | `lang` attribute on `<html>` |
+| `canonical` | – | Canonical URL for this page |
+| `alternates` | – | `hreflang` alternates |
 
 `viewport` matters more than it looks. Responsive code branches on width at
 build time, so a page prerendered at the default 390px ships its mobile layout as
@@ -7384,7 +7384,7 @@ await prerenderSite({
 and `entry`. Omit `locales` and it renders a single unlocalised pass.
 
 Each locale runs in its own subprocess. That is deliberate: a page's module-level
-state — a cached translation table, a memoised layout — would otherwise leak from
+state – a cached translation table, a memoised layout – would otherwise leak from
 one locale's render into the next, and the second language would come out subtly
 wrong in ways that only show up in production.
 
@@ -7420,7 +7420,7 @@ npx nodality prerender
 
 It reads the HTML files in your upload directory, executes the page's own entry
 script against a jsdom document, and replaces the mount point's contents with the
-rendered markup — in place, in the same file.
+rendered markup – in place, in the same file.
 
 Nothing about how you write the page changes. The same `elements` and `nodes`
 arrays produce the page at build time and hydrate it at runtime.
@@ -7454,9 +7454,9 @@ the project root, then to the defaults.
 |---|---|---|
 | `origin` | `--origin=` | Absolute site origin, used for canonical URLs and the sitemap |
 | `uploadDir` | `--upload=` | Directory holding the HTML to render. Default `upload` |
-| — | `--out=` | Write elsewhere instead of in place |
-| — | `--tolerate-async` | Do not fail the build when an async task is still pending |
-| — | `--verbose` | Report each page as it renders |
+| – | `--out=` | Write elsewhere instead of in place |
+| – | `--tolerate-async` | Do not fail the build when an async task is still pending |
+| – | `--verbose` | Report each page as it renders |
 | `locales` | `--locales=` | Render one copy per locale |
 | `defaultLocale` | `--default-locale=` | Which locale is served at the root |
 
@@ -7469,7 +7469,7 @@ npx nodality prerender --verbose
 
 A page that fetches data has not finished rendering when the synchronous pass
 ends. The prerender waits for pending work, and by default **fails** if something
-is still outstanding — a page that silently prerendered half its content would
+is still outstanding – a page that silently prerendered half its content would
 ship looking fine and be wrong only for crawlers, which is the hardest kind of
 bug to notice.
 
