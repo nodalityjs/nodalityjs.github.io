@@ -98,7 +98,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 
 ---
@@ -195,7 +195,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 
 ---
@@ -292,7 +292,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 
 ---
@@ -389,7 +389,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 
 ---
@@ -486,7 +486,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 
 ---
@@ -589,7 +589,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 
 ---
@@ -686,7 +686,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 
 ---
@@ -787,7 +787,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 
 ---
@@ -888,7 +888,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 
 ---
@@ -985,7 +985,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 
 ---
@@ -1092,7 +1092,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 
 ---
@@ -1172,7 +1172,7 @@ To use Nodality with CDN, use this code:
 <script type="module">
     import {
         Des
-    } from "https://www.unpkg.com/nodality@1.2.7/dist/index.esm.js";
+    } from "https://www.unpkg.com/nodality@1.2.8/dist/index.esm.js";
 
     let elements = [{
         type: "h1",
@@ -1478,7 +1478,7 @@ Here is the entire code using CDN:
 <div id="#mount"></div>
 
 <script type="module">
-import {Des} from "https://www.unpkg.com/nodality@1.2.7/dist/index.esm.js";
+import {Des} from "https://www.unpkg.com/nodality@1.2.8/dist/index.esm.js";
 
 let elements = [
     {
@@ -1540,7 +1540,7 @@ Use the ```render``` method, where ```#mount``` is a ```div``` element that will
 <div id="mount"></div>
 
 <script type="module">
-import {Des} from "https://www.unpkg.com/nodality@1.2.7/dist/index.esm.js";
+import {Des} from "https://www.unpkg.com/nodality@1.2.8/dist/index.esm.js";
 
 new Text("Hello")
  .set({
@@ -6765,7 +6765,7 @@ step, no install. Save it as `index.html`, open it, and the nav transitions.
   <div id="mount"></div>
 
   <script type="module">
-    import { Des } from "https://www.unpkg.com/nodality@1.2.7/dist/index.esm.js";
+    import { Des } from "https://www.unpkg.com/nodality@1.2.8/dist/index.esm.js";
 
     // Each destination is an ordinary element with an id. The id is what the
     // morph node points at, and the back button is what unwinds the path.
@@ -6899,7 +6899,7 @@ below explain what the options mean.
 
 15 ops, plus `switch`. Drivers: `static` `mouse` `hover` `scroll` `time`.
 
-Generated from nodality 1.2.7.
+Generated from nodality 1.2.8.
 
 <!-- /GENERATED:ops -->
 
