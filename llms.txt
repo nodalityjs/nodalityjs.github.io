@@ -94,7 +94,6 @@ value, or the name of an animated property.
 - [Layout](https://nodalityjs.github.io/docs/nodes/layout): To quickly generate common layout variation, we can use the following:
 - [LinkStyle](https://nodalityjs.github.io/docs/nodes/linkStyle): Link style operation allows you to style links ( elements.).
 - [Nodes](https://nodalityjs.github.io/docs/nodes/nodes): Nodes allow you to edit design of the elements.
-- [Nodes](https://nodalityjs.github.io/docs/nodes/readme): Nodes modify beahaviour of the elements.
 - [Shadow](https://nodalityjs.github.io/docs/nodes/shadow): To use the default shadow, we use the  op.
 - [Span](https://nodalityjs.github.io/docs/nodes/span): Span is a part of text that can have different contents and design from the rest of your text.
 - [Transform](https://nodalityjs.github.io/docs/nodes/transform): To use the filter, we use this node:

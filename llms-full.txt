@@ -1,6 +1,6 @@
 # Nodality — full documentation
 
-Generated from 86 pages. Source: https://nodalityjs.github.io
+Generated from 85 pages. Source: https://nodalityjs.github.io
 
 
 
@@ -16,7 +16,24 @@ Path: /docs/api/button
 
 ## Options
 
-_No component-specific options documented yet._
+| option | description |
+|---|---|
+| `align` | _undocumented_ |
+| `auto` | _undocumented_ |
+| `bold` | _undocumented_ |
+| `border` | _undocumented_ |
+| `centered` | _undocumented_ |
+| `class` | _undocumented_ |
+| `fluidc` | _undocumented_ |
+| `frame` | _undocumented_ |
+| `img` | _undocumented_ |
+| `margin` | _undocumented_ |
+| `onTap` | _undocumented_ |
+| `padding` | _undocumented_ |
+| `svg` | _undocumented_ |
+| `type` | _undocumented_ |
+| `url` | _undocumented_ |
+| `weight` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -98,7 +115,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 
 ---
@@ -113,7 +130,9 @@ Path: /docs/api/center
 
 ## Options
 
-_No component-specific options documented yet._
+| option | description |
+|---|---|
+| `id` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -195,7 +214,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 
 ---
@@ -210,7 +229,18 @@ Path: /docs/api/flexgrid
 
 ## Options
 
-_No component-specific options documented yet._
+| option | description |
+|---|---|
+| `animation` | _undocumented_ |
+| `backgroundOp` | _undocumented_ |
+| `filtera` | _undocumented_ |
+| `gradient` | _undocumented_ |
+| `id` | _undocumented_ |
+| `layout` | _undocumented_ |
+| `marginOp` | _undocumented_ |
+| `shadow` | _undocumented_ |
+| `span` | _undocumented_ |
+| `stroke` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -292,7 +322,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 
 ---
@@ -307,7 +337,20 @@ Path: /docs/api/flexrow
 
 ## Options
 
-_No component-specific options documented yet._
+| option | description |
+|---|---|
+| `animation` | _undocumented_ |
+| `backgroundOp` | _undocumented_ |
+| `filtera` | _undocumented_ |
+| `gradient` | _undocumented_ |
+| `id` | _undocumented_ |
+| `layout` | _undocumented_ |
+| `marginOp` | _undocumented_ |
+| `mobile` | _undocumented_ |
+| `onTap` | _undocumented_ |
+| `shadow` | _undocumented_ |
+| `span` | _undocumented_ |
+| `stroke` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -389,7 +432,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 
 ---
@@ -404,7 +447,22 @@ Path: /docs/api/image
 
 ## Options
 
-_No component-specific options documented yet._
+| option | description |
+|---|---|
+| `animation` | _undocumented_ |
+| `at` | _undocumented_ |
+| `backgroundOp` | _undocumented_ |
+| `filtera` | _undocumented_ |
+| `gradient` | _undocumented_ |
+| `layout` | _undocumented_ |
+| `marginOp` | _undocumented_ |
+| `onTap` | _undocumented_ |
+| `shadow` | _undocumented_ |
+| `span` | _undocumented_ |
+| `stroke` | _undocumented_ |
+| `type` | _undocumented_ |
+| `x` | _undocumented_ |
+| `y` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -486,7 +544,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 
 ---
@@ -503,11 +561,37 @@ Path: /docs/api/link
 
 | option | description |
 |---|---|
+| `align` | _undocumented_ |
+| `animation` | _undocumented_ |
+| `backgroundOp` | _undocumented_ |
+| `blast` | _undocumented_ |
+| `blastData` | _undocumented_ |
 | `block` | Render as a block-level element rather than inline. |
+| `bold` | _undocumented_ |
+| `border` | _undocumented_ |
+| `clampc` | _undocumented_ |
+| `class` | _undocumented_ |
+| `data` | _undocumented_ |
 | `fixMobileTap` | Suppress the mobile tap highlight and its 300ms delay. |
+| `fluidc` | _undocumented_ |
+| `gradient` | _undocumented_ |
+| `icon` | _undocumented_ |
+| `id` | _undocumented_ |
+| `isNavA` | _undocumented_ |
+| `marginOp` | _undocumented_ |
 | `new` | Open in a new tab — sets target="_blank" and rel="noopener noreferrer". |
 | `nowrap` | Keep the label on one line (white-space: nowrap). |
+| `onTap` | _undocumented_ |
+| `padding` | _undocumented_ |
+| `preffersId` | _undocumented_ |
 | `rounded` | Apply the default corner radius. Use `radius` for a specific value. |
+| `shadow` | _undocumented_ |
+| `span` | _undocumented_ |
+| `stroke` | _undocumented_ |
+| `tags` | _undocumented_ |
+| `text` | _undocumented_ |
+| `type` | _undocumented_ |
+| `url` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -589,7 +673,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 
 ---
@@ -604,7 +688,12 @@ Path: /docs/api/picker
 
 ## Options
 
-_No component-specific options documented yet._
+| option | description |
+|---|---|
+| `items` | The choices, each a `[value, text]` pair — or a plain string used as both. |
+| `label` | Accessible name for the control, written to `aria-label`; a select with no adjacent text has none otherwise. |
+| `name` | Field name submitted with the selected value. |
+| `title` | Accepted as a synonym for `label`, for parity with `labelInput`. |
 
 ## Inherited from Animator
 
@@ -686,7 +775,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 
 ---
@@ -703,11 +792,41 @@ Path: /docs/api/text
 
 | option | description |
 |---|---|
+| `absolute` | _undocumented_ |
+| `align` | _undocumented_ |
 | `alt` | Description for an icon that carries meaning; omit for decoration. |
+| `animation` | _undocumented_ |
+| `backgroundOp` | _undocumented_ |
+| `block` | _undocumented_ |
+| `border` | _undocumented_ |
 | `breakWord` | Allow long words to wrap mid-word (word-wrap: break-word). |
+| `clampc` | _undocumented_ |
+| `class` | _undocumented_ |
+| `em` | _undocumented_ |
+| `filtera` | _undocumented_ |
+| `fluid` | _undocumented_ |
+| `fluidc` | _undocumented_ |
 | `gpos` | Grid placement — \{col, row\}, written to grid-column and grid-row. |
+| `gradient` | _undocumented_ |
+| `icon` | _undocumented_ |
+| `id` | _undocumented_ |
+| `index` | _undocumented_ |
+| `initLetter` | _undocumented_ |
+| `italic` | _undocumented_ |
+| `layout` | _undocumented_ |
+| `marginOp` | _undocumented_ |
+| `onScroll` | _undocumented_ |
+| `onTap` | _undocumented_ |
 | `preffersId` | Prefer this id when the Designer emits code for the element. |
+| `removeDecoration` | _undocumented_ |
+| `responsive` | _undocumented_ |
+| `shadow` | _undocumented_ |
+| `span` | _undocumented_ |
+| `stroke` | _undocumented_ |
 | `tag` | Heading level to render, independent of `size`/`fluid`. |
+| `type` | _undocumented_ |
+| `url` | _undocumented_ |
+| `vtn` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -789,7 +908,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 
 ---
@@ -807,8 +926,14 @@ Path: /docs/api/textfield
 | option | description |
 |---|---|
 | `bold` | Shorthand for font-weight bold. Overrides `weight` if both are given. |
+| `id` | _undocumented_ |
+| `label` | _undocumented_ |
+| `name` | _undocumented_ |
 | `placeholder` | Placeholder text shown while the field is empty. |
+| `required` | _undocumented_ |
+| `title` | _undocumented_ |
 | `type` | Input type attribute. Defaults to "text"; "search" adds the native clear button. |
+| `weight` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -890,7 +1015,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 
 ---
@@ -905,7 +1030,17 @@ Path: /docs/api/ulist
 
 ## Options
 
-_No component-specific options documented yet._
+| option | description |
+|---|---|
+| `animation` | _undocumented_ |
+| `backgroundOp` | _undocumented_ |
+| `filtera` | _undocumented_ |
+| `gradient` | _undocumented_ |
+| `layout` | _undocumented_ |
+| `marginOp` | _undocumented_ |
+| `shadow` | _undocumented_ |
+| `span` | _undocumented_ |
+| `stroke` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -987,7 +1122,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 
 ---
@@ -1004,15 +1139,46 @@ Path: /docs/api/wrapper
 
 | option | description |
 |---|---|
+| `align` | _undocumented_ |
+| `animation` | _undocumented_ |
+| `at` | _undocumented_ |
+| `backTo` | _undocumented_ |
+| `backgroundOp` | _undocumented_ |
+| `blast` | _undocumented_ |
+| `border` | _undocumented_ |
+| `borderObja` | _undocumented_ |
+| `centerColumn` | _undocumented_ |
+| `class` | _undocumented_ |
+| `column` | _undocumented_ |
 | `customAlign` | align-items, verbatim — for values `align` does not cover. |
 | `customJustify` | justify-items, verbatim. |
 | `disp` | CSS display, verbatim — "block", "grid", "inline-flex". |
+| `filter` | _undocumented_ |
+| `filtera` | _undocumented_ |
+| `flexCenter` | _undocumented_ |
 | `flexDir` | Flex direction. Also sets display:flex, so it is enough on its own. |
 | `ga` | CSS grid-area, verbatim. |
 | `gpos` | Grid placement — \{col, row\}, written to grid-column and grid-row. |
+| `gradient` | _undocumented_ |
+| `id` | _undocumented_ |
 | `isHidden` | Hide the element. |
+| `layout` | _undocumented_ |
+| `makeResponsiveBehaviour` | _undocumented_ |
+| `marginOp` | _undocumented_ |
+| `name` | _undocumented_ |
+| `onTap` | _undocumented_ |
+| `ranges` | _undocumented_ |
+| `responsive` | _undocumented_ |
+| `scale` | _undocumented_ |
+| `sequence` | _undocumented_ |
+| `shadow` | _undocumented_ |
 | `simpleBorder` | Border as one CSS shorthand string, e.g. "1px solid #eee". |
+| `simpleCenter` | _undocumented_ |
+| `span` | _undocumented_ |
 | `sticky` | Stick to the top of the scroll container (position: sticky; top: 0). |
+| `stretch` | _undocumented_ |
+| `stroke` | _undocumented_ |
+| `weight` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -1094,7 +1260,7 @@ Accepted by every component. Defined once in `animator.js`.
 | `wordWrap` | Sets CSS `wordWrap`. |
 | `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 
 ---
@@ -1174,7 +1340,7 @@ To use Nodality with CDN, use this code:
 <script type="module">
     import {
         Des
-    } from "https://www.unpkg.com/nodality@1.3.2/dist/index.esm.js";
+    } from "https://www.unpkg.com/nodality@1.3.3/dist/index.esm.js";
 
     let elements = [{
         type: "h1",
@@ -1480,7 +1646,7 @@ Here is the entire code using CDN:
 <div id="#mount"></div>
 
 <script type="module">
-import {Des} from "https://www.unpkg.com/nodality@1.3.2/dist/index.esm.js";
+import {Des} from "https://www.unpkg.com/nodality@1.3.3/dist/index.esm.js";
 
 let elements = [
     {
@@ -1542,7 +1708,7 @@ Use the ```render``` method, where ```#mount``` is a ```div``` element that will
 <div id="mount"></div>
 
 <script type="module">
-import {Des} from "https://www.unpkg.com/nodality@1.3.2/dist/index.esm.js";
+import {Des} from "https://www.unpkg.com/nodality@1.3.3/dist/index.esm.js";
 
 new Text("Hello")
  .set({
@@ -5963,31 +6129,6 @@ These nodes are available when used with the following elements:
 
 ---
 
-# Nodes
-
-Path: /docs/nodes/readme
-
-# Nodes
-Nodes modify beahaviour of the elements.
-
-### [Animation](animation.md) 
-- creates filter animation
-
-### [Blast](blast.md) 
-- creates blast operation
-
-### [Filter](filter.md) 
-- creates filter operation
-
-### [Gradient](gradient.md) 
-- creates gradient operation
-
-### [Layout](layout.md) 
-- creates layout operation
-
-
----
-
 # Shadow
 
 Path: /docs/nodes/shadow
@@ -6767,7 +6908,7 @@ step, no install. Save it as `index.html`, open it, and the nav transitions.
   <div id="mount"></div>
 
   <script type="module">
-    import { Des } from "https://www.unpkg.com/nodality@1.3.2/dist/index.esm.js";
+    import { Des } from "https://www.unpkg.com/nodality@1.3.3/dist/index.esm.js";
 
     // Each destination is an ordinary element with an id. The id is what the
     // morph node points at, and the back button is what unwinds the path.
@@ -6901,7 +7042,7 @@ below explain what the options mean.
 
 15 ops, plus `switch`. Drivers: `static` `mouse` `hover` `scroll` `time`.
 
-Generated from nodality 1.3.2.
+Generated from nodality 1.3.3.
 
 <!-- /GENERATED:ops -->
 
