@@ -1,6 +1,6 @@
 # Nodality — full documentation
 
-Generated from 88 pages. Source: https://nodalityjs.github.io
+Generated from 89 pages. Source: https://nodalityjs.github.io
 
 
 
@@ -5117,6 +5117,131 @@ new Text("Hello").set({
   }
 });
 ```
+
+
+---
+
+# Responsive – breakpoints from content
+
+Path: /docs/nodes/arrange
+
+# Responsive – breakpoints from content
+
+*Experimental, opt-in. New in 1.4.0.*
+
+A row of three headings fits side by side on a laptop and overflows on a
+phone. The usual fix is a breakpoint at a device width – 768 px, say – that
+has nothing to do with this row: too early for short text, too late for long
+text. Nodality can instead **measure where the row stops fitting** and switch
+exactly there.
+
+Two parts:
+
+- the **`arrange` node** switches a group's arrangement inside a width range;
+- **`respond()`** from `nodality/responsive` measures the page in a browser and
+  writes those nodes for you.
+
+## The `arrange` node
+
+```js
+let nodes = [
+  { op: { name: "arrange", mode: "column" }, target: ["features"], range: [0, 424] },
+  { op: { name: "arrange", mode: "row" },    target: ["features"], range: [425, 99999] },
+];
+```
+
+| Group | Modes | Effect |
+|---|---|---|
+| `row` | `column` · `row` | stacked, or side by side |
+| `cards` | `column` · `row` | one card per line, or the grid |
+| `nav` | `collapse` · `expand` | menu button, or the full bar |
+
+Ranges are inclusive CSS pixels of the viewport width. If two ranges on one
+element overlap, the first declared wins. An `arrange` node replaces the
+group's built-in switch (700 px for cards, 1200 px for a nav), and nodes you
+wrote yourself always come before the synthesized ones.
+
+You can write these by hand. You do not have to guess the numbers.
+
+## `respond()` – solving the widths
+
+`respond()` renders the page at several widths in a browser, measures each
+group's **content** – its widest unbreakable content on one line, gaps and
+padding – against the width its parent gives it, and finds the exact pixel
+where the wide arrangement stops fitting. It returns your elements and nodes
+with one `arrange` node per interval, covering every width.
+
+It needs Playwright in your project (`npm install --save-dev playwright`) and
+runs at build time, never in the visitor's browser.
+
+```js
+import { chromium } from "playwright";
+import { respond, harnessHTML } from "nodality/responsive";
+
+const spec = {
+  elements: [
+    { id: "features", type: "row", children: [
+      { type: "h2", text: "Plain data in" },
+      { type: "h2", text: "Checked before it renders" },
+      { type: "h2", text: "Same output every time" },
+    ] },
+  ],
+  nodes: [],
+};
+
+const html = harnessHTML("https://unpkg.com/nodality@1.4.0/dist/index.esm.js");
+const browser = await chromium.launch();
+const page = await browser.newPage();
+
+// Render `s` fresh at `width`; respond() calls this for every measurement.
+const renderAt = async (width, s) => {
+  await page.setViewportSize({ width, height: 800 });
+  await page.setContent(html);
+  await page.waitForFunction(() => window.__nodalityReady === true);
+  await page.evaluate((x) => window.__nodalityRender(x), s);
+  await page.evaluate(() => new Promise((r) => setTimeout(() => requestAnimationFrame(r), 20)));
+};
+
+const out = await respond(page, spec, renderAt);
+await browser.close();
+
+console.log(out.synthesized);
+```
+
+For this row it prints the two nodes shown above: a column up to 424 px, a row
+from 425 px. Ship `out.elements` and `out.nodes` like any other pair.
+
+## What it returns
+
+| Field | Contains |
+|---|---|
+| `elements` | Your elements, with ids added to groups that had none |
+| `nodes` | Your nodes first, then the synthesized `arrange` nodes |
+| `synthesized` | Only the new `arrange` nodes |
+| `report` | Per group: the measured samples, the intervals, widths where no arrangement fits (`infeasible`) |
+| `measurements` | How many renders it took |
+| `converged` | Whether nested groups settled (see below) |
+| `skipped` | Groups left alone, with the reason |
+
+## Behaviour worth knowing
+
+- **Only switches where the layout must change.** A group that fits at every
+  width gets one `row` node over the whole range and no breakpoint.
+- **Deterministic.** No randomness, no clock: the same page always gives the
+  same nodes.
+- **Your own responsive settings win.** A group that already has `colat`,
+  `column`, `resprop` or a nav `breakpoint` is skipped, and so is a group with
+  fewer than two members.
+- **Nested groups** are solved top-down, then solved again until nothing
+  changes (at most four passes). `converged: false` means they had not settled
+  by then; the nodes are still valid, the switch widths may be a pixel or two
+  off.
+- **Some widths cannot fit.** If a single member is wider than its group – a
+  long unbreakable word, a fixed-width image – no arrangement fits there. The
+  report lists those widths as `infeasible` instead of pretending.
+- **A nav can collapse only below one width.** If its bar fails to fit on
+  separate intervals, it collapses up to the last of them (`widened` in the
+  report).
 
 
 ---

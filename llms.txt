@@ -104,6 +104,7 @@ value, or the name of an animated property.
 ## nodes
 
 - [Animation](https://nodalityjs.github.io/docs/nodes/animation): Animation allows you to animate elements.
+- [Responsive – breakpoints from content](https://nodalityjs.github.io/docs/nodes/arrange): *Experimental, opt-in.
 - [Blast](https://nodalityjs.github.io/docs/nodes/blast): Blast allows user to create outline around element contents.
 - [Copy](https://nodalityjs.github.io/docs/nodes/copy): To use the copy operation, we use these nodes:
 - [Filter](https://nodalityjs.github.io/docs/nodes/filter): To use the filter, we use this:
