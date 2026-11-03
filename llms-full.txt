@@ -1,7 +1,201 @@
 # Nodality — full documentation
 
-Generated from 85 pages. Source: https://nodalityjs.github.io
+Generated from 88 pages. Source: https://nodalityjs.github.io
 
+
+
+---
+
+# Agents – getting started
+
+Path: /docs/agents/start
+
+# Agents – getting started
+
+Nodality is written by people and by coding agents. A page is two plain
+arrays – `elements` (what exists) and `nodes` (what is done to it) – and
+plain data is what a language model writes well and what a validator can
+check before anything renders.
+
+This section is for the agent that **writes** pages. For an agent that
+**operates** a finished page, see [Agent surface](../raster/agent-surface.md).
+
+## One command
+
+```bash
+npx nodality skill
+```
+
+It installs the `/nodality` skill – the authoring workflow, the node
+families, and the house rules the schema cannot encode – into Claude Code
+(`.claude/skills/`) and Cursor (`.cursor/rules/`), and registers the
+[MCP server](tools.md) in the project's config.
+
+| Flag | Effect |
+|---|---|
+| `--claude` | Claude Code only |
+| `--cursor` | Cursor only (per project) |
+| `--global` | Install into your home directory instead of the project |
+| `--dir=<path>` | Copy `SKILL.md` for any other agent |
+| `--no-mcp` | Skip registering the MCP server |
+
+Re-run it after upgrading nodality to refresh the skill in place.
+
+## The MCP server on its own
+
+```json
+{ "mcpServers": { "nodality": { "command": "npx", "args": ["nodality", "mcp"] } } }
+```
+
+## What an agent has without a network
+
+`schema.json` (every element type and parameter, generated from the source)
+and `API.md` (an index of these docs) ship inside the npm package, so an
+agent reading `node_modules/nodality/` has the vocabulary to hand.
+[`llms.txt`](https://nodalityjs.github.io/llms.txt) and
+[`llms-full.txt`](https://nodalityjs.github.io/llms-full.txt) index the site.
+
+## The loop
+
+1. Read the vocabulary: `list_ops` for nodes, `get_schema` for the element
+   type you are about to write.
+2. Write the pair.
+3. `validate_nodes` – fix every error it reports.
+4. `preview` – render it.
+5. `check_page` – fix what the rendered page actually does wrong.
+
+See [Validation](validation.md) for what the reports look like.
+
+
+---
+
+# MCP tools
+
+Path: /docs/agents/tools
+
+# MCP tools
+
+`npx nodality mcp` runs a Model Context Protocol server over stdio with six
+tools. Every report has the same shape, so an agent repairs from one kind of
+output.
+
+| Tool | Checks or returns |
+|---|---|
+| `list_ops` | The vocabulary of `N` |
+| `get_schema` | The vocabulary of `E`, one type at a time |
+| `validate_nodes` | Whether a pair is valid, before it renders |
+| `preview` | The pair rendered to HTML |
+| `check_page` | What the rendered page actually does |
+| `parse_html` | A rendered page read back into `E` |
+
+## list_ops
+
+Every raster op with its pipeline stage and its parameters (name, default,
+unit, whether changing it rebuilds the shader), plus the parameters every
+node inherits (`target`, `by`, `side`, `ease` …), the driver, easing and unit
+names, the transition `presets` a morph may name, and the `elementTypes`. It
+is assembled from the live registry, so it cannot drift from what the
+pipeline accepts.
+
+## get_schema
+
+One element type's parameters, on demand. Call it for the type you are about
+to write rather than carrying every type in context: that is the difference
+between paying for a schema once and paying for it in every request. Each
+entry is recovered from the source the components actually read, so it cannot
+describe a parameter the library does not have. Omit `type` for the whole
+schema.
+
+Composites carry content in a slot – `items` for cards, nav, sideNav, table
+and ulist; `children` for row, form, stack and wrap.
+
+## validate_nodes
+
+Checks a node array – and, if you pass them, the elements and targets –
+and returns a report. It never throws: malformed input *is* a report. Near
+misses are checked against the op that was meant, so one call returns every
+error. See [Validation](validation.md).
+
+## preview
+
+Renders an `(E, N)` pair to a self-contained HTML file through the
+build-time prerenderer (jsdom; no browser is launched) and returns
+`{ path, bytes, note }`. Invalid nodes return the validation report instead.
+Raster effects and transitions need a GPU and run only when the file is
+opened in a browser. Needs `jsdom` in your project.
+
+## check_page
+
+What the page actually does once it has real layout, at a phone and a
+desktop width: horizontal overflow, elements past the viewport, clipped
+content, images with no description, tap targets under 24 px, controls with
+no accessible name, skipped heading levels and text below the WCAG contrast
+minimum. Pass `html`, or `path` to a file `preview` wrote; for a prerendered
+site page, pass `base` so its fonts and assets load. It reports facts, never
+taste. Needs Playwright in your project.
+
+## parse_html
+
+Reads a rendered page back into an `E` array, so a page can be edited rather
+than regenerated. A page rendered with `{ annotate: true }` comes back
+exactly. Without it, only what the tag settles is recovered (headings,
+paragraphs, links, images, lists); composites that render as a bare `<div>`
+are reported as unrecovered rather than guessed.
+
+
+---
+
+# Validation
+
+Path: /docs/agents/validation
+
+# Validation
+
+A misspelled op does not throw – it renders nothing. Content in the wrong
+slot of a composite renders placeholders. The validator turns those silent
+failures into a report an agent can act on.
+
+```js
+import { validateNodes, describeOps } from "nodality/validate";
+
+const report = validateNodes([{ op: "dithr", target: ["hero"] }], elements);
+```
+
+```json
+{ "ok": false,
+  "errors": [
+    { "code": "UNKNOWN_OP", "path": "nodes[0].op", "got": "dithr",
+      "suggestions": ["dither"], "valid": ["hexalize", "offset", "flow", "…"] } ],
+  "warnings": [] }
+```
+
+Each error carries a `code`, the `path` that failed, what it `got`,
+did-you-mean `suggestions` and the `valid` vocabulary for that position. Pass `elements` too and every `target` is checked against real
+ids, and the elements themselves are validated.
+
+Common codes:
+
+| Code | Means |
+|---|---|
+| `UNKNOWN_OP` | No op by that name |
+| `UNKNOWN_PARAM` | The op has no such parameter |
+| `UNKNOWN_TARGET` | A `target` id that no element has |
+| `UNKNOWN_ELEMENT_TYPE` | An element `type` that names nothing |
+| `WRONG_CONTENT_SLOT` | Content in `items` where the type reads `children`, or the reverse |
+| `MISSING_FIELD` | A required field, such as an element's `type`, is absent |
+
+## Checking the rendered page
+
+Valid input can still produce a wrong page. `checkPage` drives a real browser
+at a phone and a desktop width and reports in the same shape:
+
+```js
+import { checkPage } from "nodality/check"; // needs Playwright in your project
+
+const report = await checkPage(html);
+```
+
+Both are also [MCP tools](tools.md).
 
 
 ---
@@ -20,20 +214,26 @@ Path: /docs/api/button
 |---|---|
 | `align` | _undocumented_ |
 | `auto` | _undocumented_ |
+| `background` | _undocumented_ |
 | `bold` | _undocumented_ |
 | `border` | _undocumented_ |
 | `centered` | _undocumented_ |
 | `class` | _undocumented_ |
+| `color` | _undocumented_ |
+| `exact` | _undocumented_ |
 | `fluidc` | _undocumented_ |
 | `frame` | _undocumented_ |
+| `height` | _undocumented_ |
 | `img` | _undocumented_ |
 | `margin` | _undocumented_ |
 | `onTap` | _undocumented_ |
 | `padding` | _undocumented_ |
+| `radius` | _undocumented_ |
 | `svg` | _undocumented_ |
 | `type` | _undocumented_ |
 | `url` | _undocumented_ |
 | `weight` | _undocumented_ |
+| `width` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -41,81 +241,9 @@ Accepted by every component. Defined once in `animator.js`.
 
 | option | description |
 |---|---|
-| `WebkitBackdropFilter` | Sets CSS `WebkitBackdropFilter`. |
-| `WebkitOverflowScrolling` | Sets CSS `WebkitOverflowScrolling`. |
-| `WebkitTapHighlightColor` | Sets CSS `WebkitTapHighlightColor`. |
-| `WebkitUserSelect` | Sets CSS `WebkitUserSelect`. |
-| `alignSelf` | Sets CSS `alignSelf`. |
-| `area` | Sets CSS `gridArea`. |
-| `areas` | Sets CSS `gridTemplateAreas`. |
-| `backdropFilter` | Sets CSS `backdropFilter`. |
-| `background` | Sets CSS `background`. |
-| `borderObj` | Border as \{width, color, type?, radius?\}. Width carries its unit, e.g. "1px". |
-| `bottom` | Sets CSS `bottom`. |
-| `boxShadow` | Sets CSS `boxShadow`. |
-| `boxSizing` | Sets CSS `boxSizing`. |
 | `center` | Centres this element's CHILDREN. `true` for both axes, `"x"` horizontal, `"y"` vertical. Axis-aware: in a flex column `"y"` is justify-content, in a row it is align-items; a grid uses justify-items/align-items. To centre the element itself inside its parent, use `mar: "center"`. |
-| `color` | Sets CSS `color`. |
-| `cols` | Sets CSS `gridTemplateColumns`. |
-| `columnGap` | Sets CSS `columnGap`. |
-| `cursor` | Sets CSS `cursor`. |
-| `display` | Sets CSS `display`. |
-| `exact` | Sets CSS `fontSize`. |
-| `flex` | Sets CSS `flex`. |
-| `flexBasis` | Sets CSS `flexBasis`. |
-| `flexGrow` | Sets CSS `flexGrow`. |
-| `flexShrink` | Sets CSS `flexShrink`. |
-| `flexWrap` | Sets CSS `flexWrap`. |
-| `font` | Sets CSS `fontFamily`. |
-| `gap` | Sets CSS `gap`. |
-| `gridTemplateColumns` | Sets CSS `gridTemplateColumns`. |
-| `gridTemplateRows` | Sets CSS `gridTemplateRows`. |
-| `height` | Sets CSS `height`. |
-| `hide` | Hide the element without removing it from the tree. |
-| `hover` | Styles applied on hover, e.g. \{color, background, animation: "0.2s ease"\}. |
-| `inset` | Sets CSS `inset`. |
-| `keySet` | Escape hatch — \{key, value\} written straight to element.style, or an array of them. |
-| `left` | Sets CSS `left`. |
-| `letterSpacing` | Sets CSS `letterSpacing`. |
-| `lineHeight` | Sets CSS `lineHeight`. |
-| `mar` | Margin. The same array-of-side-objects form as `pad`: `mar: [{a: 40}]`, keys `a t r b l`, combinable. Additionally `mar: "center"` sets left and right to auto, as does `{a: "auto"}` or `{center: true}`. |
-| `maxHeight` | Sets CSS `maxHeight`. |
-| `maxWidth` | Sets CSS `maxWidth`. |
-| `minHeight` | Sets CSS `minHeight`. |
-| `minWidth` | Sets CSS `minWidth`. |
-| `noTheme` | Opt this element out of Theme.setDefaults light/dark colouring. |
-| `opacity` | Sets CSS `opacity`. |
-| `overflow` | Sets CSS `overflow`. |
-| `overflowWrap` | Sets CSS `overflowWrap`. |
-| `overflowX` | Sets CSS `overflowX`. |
-| `overflowY` | Sets CSS `overflowY`. |
-| `pad` | Padding. An array of side objects: `pad: [{a: 40}]`. Keys are `a` all, `t` top, `r` right, `b` bottom, `l` left. Keys combine, so `{tb: 12}` sets top and bottom. A bare number is treated as px; any string is passed through, so `{a: "2rem"}` works. |
-| `pointerEvents` | Sets CSS `pointerEvents`. |
-| `position` | Sets CSS `position`. |
-| `radius` | Sets CSS `borderRadius`. |
-| `raster` | Attach a WebGL raster pipeline. Array of op nodes; see the Raster section. |
-| `resmar` | Responsive margin — per-breakpoint overrides of `mar`, in the same form. |
-| `respad` | Responsive padding — per-breakpoint overrides of `pad`, in the same form. |
-| `resprop` | Per-breakpoint style overrides — [\{breakpoint, ...css\}]. `exact` is font size. |
-| `right` | Sets CSS `right`. |
-| `rowGap` | Sets CSS `rowGap`. |
-| `rows` | Sets CSS `gridTemplateRows`. |
-| `size` | Fluid type scale step (S1…S6) — font size that scales with the viewport. |
-| `textAlign` | Sets CSS `textAlign`. |
-| `textTransform` | Sets CSS `textTransform`. |
-| `theme` | Explicit light/dark overrides — \{light: \{...\}, dark: \{...\}\}. |
-| `top` | Sets CSS `top`. |
-| `transform` | A CSS transform string applied verbatim, or an object handled by reactOnTransform(). Composed with `scale` when both are given. |
-| `transition` | Sets CSS `transition`. |
-| `userSelect` | Sets CSS `userSelect`. |
-| `vars` | Custom CSS properties on this element — \{"--nod-split": 0.2\}. Custom properties inherit, so writing them on a root drives its whole subtree with one declaration; that is how the morph axes reach every generated element without a stylesheet. |
-| `whiteSpace` | Sets CSS `whiteSpace`. |
-| `width` | Sets CSS `width`. |
-| `wordBreak` | Sets CSS `wordBreak`. |
-| `wordWrap` | Sets CSS `wordWrap`. |
-| `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 
 ---
@@ -140,81 +268,9 @@ Accepted by every component. Defined once in `animator.js`.
 
 | option | description |
 |---|---|
-| `WebkitBackdropFilter` | Sets CSS `WebkitBackdropFilter`. |
-| `WebkitOverflowScrolling` | Sets CSS `WebkitOverflowScrolling`. |
-| `WebkitTapHighlightColor` | Sets CSS `WebkitTapHighlightColor`. |
-| `WebkitUserSelect` | Sets CSS `WebkitUserSelect`. |
-| `alignSelf` | Sets CSS `alignSelf`. |
-| `area` | Sets CSS `gridArea`. |
-| `areas` | Sets CSS `gridTemplateAreas`. |
-| `backdropFilter` | Sets CSS `backdropFilter`. |
-| `background` | Sets CSS `background`. |
-| `borderObj` | Border as \{width, color, type?, radius?\}. Width carries its unit, e.g. "1px". |
-| `bottom` | Sets CSS `bottom`. |
-| `boxShadow` | Sets CSS `boxShadow`. |
-| `boxSizing` | Sets CSS `boxSizing`. |
 | `center` | Centres this element's CHILDREN. `true` for both axes, `"x"` horizontal, `"y"` vertical. Axis-aware: in a flex column `"y"` is justify-content, in a row it is align-items; a grid uses justify-items/align-items. To centre the element itself inside its parent, use `mar: "center"`. |
-| `color` | Sets CSS `color`. |
-| `cols` | Sets CSS `gridTemplateColumns`. |
-| `columnGap` | Sets CSS `columnGap`. |
-| `cursor` | Sets CSS `cursor`. |
-| `display` | Sets CSS `display`. |
-| `exact` | Sets CSS `fontSize`. |
-| `flex` | Sets CSS `flex`. |
-| `flexBasis` | Sets CSS `flexBasis`. |
-| `flexGrow` | Sets CSS `flexGrow`. |
-| `flexShrink` | Sets CSS `flexShrink`. |
-| `flexWrap` | Sets CSS `flexWrap`. |
-| `font` | Sets CSS `fontFamily`. |
-| `gap` | Sets CSS `gap`. |
-| `gridTemplateColumns` | Sets CSS `gridTemplateColumns`. |
-| `gridTemplateRows` | Sets CSS `gridTemplateRows`. |
-| `height` | Sets CSS `height`. |
-| `hide` | Hide the element without removing it from the tree. |
-| `hover` | Styles applied on hover, e.g. \{color, background, animation: "0.2s ease"\}. |
-| `inset` | Sets CSS `inset`. |
-| `keySet` | Escape hatch — \{key, value\} written straight to element.style, or an array of them. |
-| `left` | Sets CSS `left`. |
-| `letterSpacing` | Sets CSS `letterSpacing`. |
-| `lineHeight` | Sets CSS `lineHeight`. |
-| `mar` | Margin. The same array-of-side-objects form as `pad`: `mar: [{a: 40}]`, keys `a t r b l`, combinable. Additionally `mar: "center"` sets left and right to auto, as does `{a: "auto"}` or `{center: true}`. |
-| `maxHeight` | Sets CSS `maxHeight`. |
-| `maxWidth` | Sets CSS `maxWidth`. |
-| `minHeight` | Sets CSS `minHeight`. |
-| `minWidth` | Sets CSS `minWidth`. |
-| `noTheme` | Opt this element out of Theme.setDefaults light/dark colouring. |
-| `opacity` | Sets CSS `opacity`. |
-| `overflow` | Sets CSS `overflow`. |
-| `overflowWrap` | Sets CSS `overflowWrap`. |
-| `overflowX` | Sets CSS `overflowX`. |
-| `overflowY` | Sets CSS `overflowY`. |
-| `pad` | Padding. An array of side objects: `pad: [{a: 40}]`. Keys are `a` all, `t` top, `r` right, `b` bottom, `l` left. Keys combine, so `{tb: 12}` sets top and bottom. A bare number is treated as px; any string is passed through, so `{a: "2rem"}` works. |
-| `pointerEvents` | Sets CSS `pointerEvents`. |
-| `position` | Sets CSS `position`. |
-| `radius` | Sets CSS `borderRadius`. |
-| `raster` | Attach a WebGL raster pipeline. Array of op nodes; see the Raster section. |
-| `resmar` | Responsive margin — per-breakpoint overrides of `mar`, in the same form. |
-| `respad` | Responsive padding — per-breakpoint overrides of `pad`, in the same form. |
-| `resprop` | Per-breakpoint style overrides — [\{breakpoint, ...css\}]. `exact` is font size. |
-| `right` | Sets CSS `right`. |
-| `rowGap` | Sets CSS `rowGap`. |
-| `rows` | Sets CSS `gridTemplateRows`. |
-| `size` | Fluid type scale step (S1…S6) — font size that scales with the viewport. |
-| `textAlign` | Sets CSS `textAlign`. |
-| `textTransform` | Sets CSS `textTransform`. |
-| `theme` | Explicit light/dark overrides — \{light: \{...\}, dark: \{...\}\}. |
-| `top` | Sets CSS `top`. |
-| `transform` | A CSS transform string applied verbatim, or an object handled by reactOnTransform(). Composed with `scale` when both are given. |
-| `transition` | Sets CSS `transition`. |
-| `userSelect` | Sets CSS `userSelect`. |
-| `vars` | Custom CSS properties on this element — \{"--nod-split": 0.2\}. Custom properties inherit, so writing them on a root drives its whole subtree with one declaration; that is how the morph axes reach every generated element without a stylesheet. |
-| `whiteSpace` | Sets CSS `whiteSpace`. |
-| `width` | Sets CSS `width`. |
-| `wordBreak` | Sets CSS `wordBreak`. |
-| `wordWrap` | Sets CSS `wordWrap`. |
-| `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 
 ---
@@ -232,6 +288,7 @@ Path: /docs/api/flexgrid
 | option | description |
 |---|---|
 | `animation` | _undocumented_ |
+| `background` | _undocumented_ |
 | `backgroundOp` | _undocumented_ |
 | `filtera` | _undocumented_ |
 | `gradient` | _undocumented_ |
@@ -248,81 +305,9 @@ Accepted by every component. Defined once in `animator.js`.
 
 | option | description |
 |---|---|
-| `WebkitBackdropFilter` | Sets CSS `WebkitBackdropFilter`. |
-| `WebkitOverflowScrolling` | Sets CSS `WebkitOverflowScrolling`. |
-| `WebkitTapHighlightColor` | Sets CSS `WebkitTapHighlightColor`. |
-| `WebkitUserSelect` | Sets CSS `WebkitUserSelect`. |
-| `alignSelf` | Sets CSS `alignSelf`. |
-| `area` | Sets CSS `gridArea`. |
-| `areas` | Sets CSS `gridTemplateAreas`. |
-| `backdropFilter` | Sets CSS `backdropFilter`. |
-| `background` | Sets CSS `background`. |
-| `borderObj` | Border as \{width, color, type?, radius?\}. Width carries its unit, e.g. "1px". |
-| `bottom` | Sets CSS `bottom`. |
-| `boxShadow` | Sets CSS `boxShadow`. |
-| `boxSizing` | Sets CSS `boxSizing`. |
 | `center` | Centres this element's CHILDREN. `true` for both axes, `"x"` horizontal, `"y"` vertical. Axis-aware: in a flex column `"y"` is justify-content, in a row it is align-items; a grid uses justify-items/align-items. To centre the element itself inside its parent, use `mar: "center"`. |
-| `color` | Sets CSS `color`. |
-| `cols` | Sets CSS `gridTemplateColumns`. |
-| `columnGap` | Sets CSS `columnGap`. |
-| `cursor` | Sets CSS `cursor`. |
-| `display` | Sets CSS `display`. |
-| `exact` | Sets CSS `fontSize`. |
-| `flex` | Sets CSS `flex`. |
-| `flexBasis` | Sets CSS `flexBasis`. |
-| `flexGrow` | Sets CSS `flexGrow`. |
-| `flexShrink` | Sets CSS `flexShrink`. |
-| `flexWrap` | Sets CSS `flexWrap`. |
-| `font` | Sets CSS `fontFamily`. |
-| `gap` | Sets CSS `gap`. |
-| `gridTemplateColumns` | Sets CSS `gridTemplateColumns`. |
-| `gridTemplateRows` | Sets CSS `gridTemplateRows`. |
-| `height` | Sets CSS `height`. |
-| `hide` | Hide the element without removing it from the tree. |
-| `hover` | Styles applied on hover, e.g. \{color, background, animation: "0.2s ease"\}. |
-| `inset` | Sets CSS `inset`. |
-| `keySet` | Escape hatch — \{key, value\} written straight to element.style, or an array of them. |
-| `left` | Sets CSS `left`. |
-| `letterSpacing` | Sets CSS `letterSpacing`. |
-| `lineHeight` | Sets CSS `lineHeight`. |
-| `mar` | Margin. The same array-of-side-objects form as `pad`: `mar: [{a: 40}]`, keys `a t r b l`, combinable. Additionally `mar: "center"` sets left and right to auto, as does `{a: "auto"}` or `{center: true}`. |
-| `maxHeight` | Sets CSS `maxHeight`. |
-| `maxWidth` | Sets CSS `maxWidth`. |
-| `minHeight` | Sets CSS `minHeight`. |
-| `minWidth` | Sets CSS `minWidth`. |
-| `noTheme` | Opt this element out of Theme.setDefaults light/dark colouring. |
-| `opacity` | Sets CSS `opacity`. |
-| `overflow` | Sets CSS `overflow`. |
-| `overflowWrap` | Sets CSS `overflowWrap`. |
-| `overflowX` | Sets CSS `overflowX`. |
-| `overflowY` | Sets CSS `overflowY`. |
-| `pad` | Padding. An array of side objects: `pad: [{a: 40}]`. Keys are `a` all, `t` top, `r` right, `b` bottom, `l` left. Keys combine, so `{tb: 12}` sets top and bottom. A bare number is treated as px; any string is passed through, so `{a: "2rem"}` works. |
-| `pointerEvents` | Sets CSS `pointerEvents`. |
-| `position` | Sets CSS `position`. |
-| `radius` | Sets CSS `borderRadius`. |
-| `raster` | Attach a WebGL raster pipeline. Array of op nodes; see the Raster section. |
-| `resmar` | Responsive margin — per-breakpoint overrides of `mar`, in the same form. |
-| `respad` | Responsive padding — per-breakpoint overrides of `pad`, in the same form. |
-| `resprop` | Per-breakpoint style overrides — [\{breakpoint, ...css\}]. `exact` is font size. |
-| `right` | Sets CSS `right`. |
-| `rowGap` | Sets CSS `rowGap`. |
-| `rows` | Sets CSS `gridTemplateRows`. |
-| `size` | Fluid type scale step (S1…S6) — font size that scales with the viewport. |
-| `textAlign` | Sets CSS `textAlign`. |
-| `textTransform` | Sets CSS `textTransform`. |
-| `theme` | Explicit light/dark overrides — \{light: \{...\}, dark: \{...\}\}. |
-| `top` | Sets CSS `top`. |
-| `transform` | A CSS transform string applied verbatim, or an object handled by reactOnTransform(). Composed with `scale` when both are given. |
-| `transition` | Sets CSS `transition`. |
-| `userSelect` | Sets CSS `userSelect`. |
-| `vars` | Custom CSS properties on this element — \{"--nod-split": 0.2\}. Custom properties inherit, so writing them on a root drives its whole subtree with one declaration; that is how the morph axes reach every generated element without a stylesheet. |
-| `whiteSpace` | Sets CSS `whiteSpace`. |
-| `width` | Sets CSS `width`. |
-| `wordBreak` | Sets CSS `wordBreak`. |
-| `wordWrap` | Sets CSS `wordWrap`. |
-| `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 
 ---
@@ -340,17 +325,22 @@ Path: /docs/api/flexrow
 | option | description |
 |---|---|
 | `animation` | _undocumented_ |
+| `background` | _undocumented_ |
 | `backgroundOp` | _undocumented_ |
 | `filtera` | _undocumented_ |
 | `gradient` | _undocumented_ |
+| `height` | _undocumented_ |
 | `id` | _undocumented_ |
 | `layout` | _undocumented_ |
 | `marginOp` | _undocumented_ |
 | `mobile` | _undocumented_ |
 | `onTap` | _undocumented_ |
+| `position` | _undocumented_ |
 | `shadow` | _undocumented_ |
 | `span` | _undocumented_ |
 | `stroke` | _undocumented_ |
+| `top` | _undocumented_ |
+| `width` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -358,81 +348,9 @@ Accepted by every component. Defined once in `animator.js`.
 
 | option | description |
 |---|---|
-| `WebkitBackdropFilter` | Sets CSS `WebkitBackdropFilter`. |
-| `WebkitOverflowScrolling` | Sets CSS `WebkitOverflowScrolling`. |
-| `WebkitTapHighlightColor` | Sets CSS `WebkitTapHighlightColor`. |
-| `WebkitUserSelect` | Sets CSS `WebkitUserSelect`. |
-| `alignSelf` | Sets CSS `alignSelf`. |
-| `area` | Sets CSS `gridArea`. |
-| `areas` | Sets CSS `gridTemplateAreas`. |
-| `backdropFilter` | Sets CSS `backdropFilter`. |
-| `background` | Sets CSS `background`. |
-| `borderObj` | Border as \{width, color, type?, radius?\}. Width carries its unit, e.g. "1px". |
-| `bottom` | Sets CSS `bottom`. |
-| `boxShadow` | Sets CSS `boxShadow`. |
-| `boxSizing` | Sets CSS `boxSizing`. |
 | `center` | Centres this element's CHILDREN. `true` for both axes, `"x"` horizontal, `"y"` vertical. Axis-aware: in a flex column `"y"` is justify-content, in a row it is align-items; a grid uses justify-items/align-items. To centre the element itself inside its parent, use `mar: "center"`. |
-| `color` | Sets CSS `color`. |
-| `cols` | Sets CSS `gridTemplateColumns`. |
-| `columnGap` | Sets CSS `columnGap`. |
-| `cursor` | Sets CSS `cursor`. |
-| `display` | Sets CSS `display`. |
-| `exact` | Sets CSS `fontSize`. |
-| `flex` | Sets CSS `flex`. |
-| `flexBasis` | Sets CSS `flexBasis`. |
-| `flexGrow` | Sets CSS `flexGrow`. |
-| `flexShrink` | Sets CSS `flexShrink`. |
-| `flexWrap` | Sets CSS `flexWrap`. |
-| `font` | Sets CSS `fontFamily`. |
-| `gap` | Sets CSS `gap`. |
-| `gridTemplateColumns` | Sets CSS `gridTemplateColumns`. |
-| `gridTemplateRows` | Sets CSS `gridTemplateRows`. |
-| `height` | Sets CSS `height`. |
-| `hide` | Hide the element without removing it from the tree. |
-| `hover` | Styles applied on hover, e.g. \{color, background, animation: "0.2s ease"\}. |
-| `inset` | Sets CSS `inset`. |
-| `keySet` | Escape hatch — \{key, value\} written straight to element.style, or an array of them. |
-| `left` | Sets CSS `left`. |
-| `letterSpacing` | Sets CSS `letterSpacing`. |
-| `lineHeight` | Sets CSS `lineHeight`. |
-| `mar` | Margin. The same array-of-side-objects form as `pad`: `mar: [{a: 40}]`, keys `a t r b l`, combinable. Additionally `mar: "center"` sets left and right to auto, as does `{a: "auto"}` or `{center: true}`. |
-| `maxHeight` | Sets CSS `maxHeight`. |
-| `maxWidth` | Sets CSS `maxWidth`. |
-| `minHeight` | Sets CSS `minHeight`. |
-| `minWidth` | Sets CSS `minWidth`. |
-| `noTheme` | Opt this element out of Theme.setDefaults light/dark colouring. |
-| `opacity` | Sets CSS `opacity`. |
-| `overflow` | Sets CSS `overflow`. |
-| `overflowWrap` | Sets CSS `overflowWrap`. |
-| `overflowX` | Sets CSS `overflowX`. |
-| `overflowY` | Sets CSS `overflowY`. |
-| `pad` | Padding. An array of side objects: `pad: [{a: 40}]`. Keys are `a` all, `t` top, `r` right, `b` bottom, `l` left. Keys combine, so `{tb: 12}` sets top and bottom. A bare number is treated as px; any string is passed through, so `{a: "2rem"}` works. |
-| `pointerEvents` | Sets CSS `pointerEvents`. |
-| `position` | Sets CSS `position`. |
-| `radius` | Sets CSS `borderRadius`. |
-| `raster` | Attach a WebGL raster pipeline. Array of op nodes; see the Raster section. |
-| `resmar` | Responsive margin — per-breakpoint overrides of `mar`, in the same form. |
-| `respad` | Responsive padding — per-breakpoint overrides of `pad`, in the same form. |
-| `resprop` | Per-breakpoint style overrides — [\{breakpoint, ...css\}]. `exact` is font size. |
-| `right` | Sets CSS `right`. |
-| `rowGap` | Sets CSS `rowGap`. |
-| `rows` | Sets CSS `gridTemplateRows`. |
-| `size` | Fluid type scale step (S1…S6) — font size that scales with the viewport. |
-| `textAlign` | Sets CSS `textAlign`. |
-| `textTransform` | Sets CSS `textTransform`. |
-| `theme` | Explicit light/dark overrides — \{light: \{...\}, dark: \{...\}\}. |
-| `top` | Sets CSS `top`. |
-| `transform` | A CSS transform string applied verbatim, or an object handled by reactOnTransform(). Composed with `scale` when both are given. |
-| `transition` | Sets CSS `transition`. |
-| `userSelect` | Sets CSS `userSelect`. |
-| `vars` | Custom CSS properties on this element — \{"--nod-split": 0.2\}. Custom properties inherit, so writing them on a root drives its whole subtree with one declaration; that is how the morph axes reach every generated element without a stylesheet. |
-| `whiteSpace` | Sets CSS `whiteSpace`. |
-| `width` | Sets CSS `width`. |
-| `wordBreak` | Sets CSS `wordBreak`. |
-| `wordWrap` | Sets CSS `wordWrap`. |
-| `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 
 ---
@@ -452,15 +370,19 @@ Path: /docs/api/image
 | `animation` | _undocumented_ |
 | `at` | _undocumented_ |
 | `backgroundOp` | _undocumented_ |
+| `color` | _undocumented_ |
 | `filtera` | _undocumented_ |
 | `gradient` | _undocumented_ |
+| `height` | _undocumented_ |
 | `layout` | _undocumented_ |
 | `marginOp` | _undocumented_ |
 | `onTap` | _undocumented_ |
+| `radius` | _undocumented_ |
 | `shadow` | _undocumented_ |
 | `span` | _undocumented_ |
 | `stroke` | _undocumented_ |
 | `type` | _undocumented_ |
+| `width` | _undocumented_ |
 | `x` | _undocumented_ |
 | `y` | _undocumented_ |
 
@@ -470,81 +392,9 @@ Accepted by every component. Defined once in `animator.js`.
 
 | option | description |
 |---|---|
-| `WebkitBackdropFilter` | Sets CSS `WebkitBackdropFilter`. |
-| `WebkitOverflowScrolling` | Sets CSS `WebkitOverflowScrolling`. |
-| `WebkitTapHighlightColor` | Sets CSS `WebkitTapHighlightColor`. |
-| `WebkitUserSelect` | Sets CSS `WebkitUserSelect`. |
-| `alignSelf` | Sets CSS `alignSelf`. |
-| `area` | Sets CSS `gridArea`. |
-| `areas` | Sets CSS `gridTemplateAreas`. |
-| `backdropFilter` | Sets CSS `backdropFilter`. |
-| `background` | Sets CSS `background`. |
-| `borderObj` | Border as \{width, color, type?, radius?\}. Width carries its unit, e.g. "1px". |
-| `bottom` | Sets CSS `bottom`. |
-| `boxShadow` | Sets CSS `boxShadow`. |
-| `boxSizing` | Sets CSS `boxSizing`. |
 | `center` | Centres this element's CHILDREN. `true` for both axes, `"x"` horizontal, `"y"` vertical. Axis-aware: in a flex column `"y"` is justify-content, in a row it is align-items; a grid uses justify-items/align-items. To centre the element itself inside its parent, use `mar: "center"`. |
-| `color` | Sets CSS `color`. |
-| `cols` | Sets CSS `gridTemplateColumns`. |
-| `columnGap` | Sets CSS `columnGap`. |
-| `cursor` | Sets CSS `cursor`. |
-| `display` | Sets CSS `display`. |
-| `exact` | Sets CSS `fontSize`. |
-| `flex` | Sets CSS `flex`. |
-| `flexBasis` | Sets CSS `flexBasis`. |
-| `flexGrow` | Sets CSS `flexGrow`. |
-| `flexShrink` | Sets CSS `flexShrink`. |
-| `flexWrap` | Sets CSS `flexWrap`. |
-| `font` | Sets CSS `fontFamily`. |
-| `gap` | Sets CSS `gap`. |
-| `gridTemplateColumns` | Sets CSS `gridTemplateColumns`. |
-| `gridTemplateRows` | Sets CSS `gridTemplateRows`. |
-| `height` | Sets CSS `height`. |
-| `hide` | Hide the element without removing it from the tree. |
-| `hover` | Styles applied on hover, e.g. \{color, background, animation: "0.2s ease"\}. |
-| `inset` | Sets CSS `inset`. |
-| `keySet` | Escape hatch — \{key, value\} written straight to element.style, or an array of them. |
-| `left` | Sets CSS `left`. |
-| `letterSpacing` | Sets CSS `letterSpacing`. |
-| `lineHeight` | Sets CSS `lineHeight`. |
-| `mar` | Margin. The same array-of-side-objects form as `pad`: `mar: [{a: 40}]`, keys `a t r b l`, combinable. Additionally `mar: "center"` sets left and right to auto, as does `{a: "auto"}` or `{center: true}`. |
-| `maxHeight` | Sets CSS `maxHeight`. |
-| `maxWidth` | Sets CSS `maxWidth`. |
-| `minHeight` | Sets CSS `minHeight`. |
-| `minWidth` | Sets CSS `minWidth`. |
-| `noTheme` | Opt this element out of Theme.setDefaults light/dark colouring. |
-| `opacity` | Sets CSS `opacity`. |
-| `overflow` | Sets CSS `overflow`. |
-| `overflowWrap` | Sets CSS `overflowWrap`. |
-| `overflowX` | Sets CSS `overflowX`. |
-| `overflowY` | Sets CSS `overflowY`. |
-| `pad` | Padding. An array of side objects: `pad: [{a: 40}]`. Keys are `a` all, `t` top, `r` right, `b` bottom, `l` left. Keys combine, so `{tb: 12}` sets top and bottom. A bare number is treated as px; any string is passed through, so `{a: "2rem"}` works. |
-| `pointerEvents` | Sets CSS `pointerEvents`. |
-| `position` | Sets CSS `position`. |
-| `radius` | Sets CSS `borderRadius`. |
-| `raster` | Attach a WebGL raster pipeline. Array of op nodes; see the Raster section. |
-| `resmar` | Responsive margin — per-breakpoint overrides of `mar`, in the same form. |
-| `respad` | Responsive padding — per-breakpoint overrides of `pad`, in the same form. |
-| `resprop` | Per-breakpoint style overrides — [\{breakpoint, ...css\}]. `exact` is font size. |
-| `right` | Sets CSS `right`. |
-| `rowGap` | Sets CSS `rowGap`. |
-| `rows` | Sets CSS `gridTemplateRows`. |
-| `size` | Fluid type scale step (S1…S6) — font size that scales with the viewport. |
-| `textAlign` | Sets CSS `textAlign`. |
-| `textTransform` | Sets CSS `textTransform`. |
-| `theme` | Explicit light/dark overrides — \{light: \{...\}, dark: \{...\}\}. |
-| `top` | Sets CSS `top`. |
-| `transform` | A CSS transform string applied verbatim, or an object handled by reactOnTransform(). Composed with `scale` when both are given. |
-| `transition` | Sets CSS `transition`. |
-| `userSelect` | Sets CSS `userSelect`. |
-| `vars` | Custom CSS properties on this element — \{"--nod-split": 0.2\}. Custom properties inherit, so writing them on a root drives its whole subtree with one declaration; that is how the morph axes reach every generated element without a stylesheet. |
-| `whiteSpace` | Sets CSS `whiteSpace`. |
-| `width` | Sets CSS `width`. |
-| `wordBreak` | Sets CSS `wordBreak`. |
-| `wordWrap` | Sets CSS `wordWrap`. |
-| `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 
 ---
@@ -563,6 +413,7 @@ Path: /docs/api/link
 |---|---|
 | `align` | _undocumented_ |
 | `animation` | _undocumented_ |
+| `background` | _undocumented_ |
 | `backgroundOp` | _undocumented_ |
 | `blast` | _undocumented_ |
 | `blastData` | _undocumented_ |
@@ -571,20 +422,25 @@ Path: /docs/api/link
 | `border` | _undocumented_ |
 | `clampc` | _undocumented_ |
 | `class` | _undocumented_ |
+| `color` | _undocumented_ |
 | `data` | _undocumented_ |
 | `fixMobileTap` | Suppress the mobile tap highlight and its 300ms delay. |
+| `flex` | _undocumented_ |
 | `fluidc` | _undocumented_ |
+| `font` | _undocumented_ |
 | `gradient` | _undocumented_ |
 | `icon` | _undocumented_ |
 | `id` | _undocumented_ |
 | `isNavA` | _undocumented_ |
 | `marginOp` | _undocumented_ |
+| `maxWidth` | _undocumented_ |
 | `new` | Open in a new tab — sets target="_blank" and rel="noopener noreferrer". |
 | `nowrap` | Keep the label on one line (white-space: nowrap). |
 | `onTap` | _undocumented_ |
 | `padding` | _undocumented_ |
 | `preffersId` | _undocumented_ |
-| `rounded` | Apply the default corner radius. Use `radius` for a specific value. |
+| `radius` | _undocumented_ |
+| `rounded` | Apply the default corner radius (0.5rem). Use `radius` for a specific value. |
 | `shadow` | _undocumented_ |
 | `span` | _undocumented_ |
 | `stroke` | _undocumented_ |
@@ -592,6 +448,7 @@ Path: /docs/api/link
 | `text` | _undocumented_ |
 | `type` | _undocumented_ |
 | `url` | _undocumented_ |
+| `width` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -599,81 +456,9 @@ Accepted by every component. Defined once in `animator.js`.
 
 | option | description |
 |---|---|
-| `WebkitBackdropFilter` | Sets CSS `WebkitBackdropFilter`. |
-| `WebkitOverflowScrolling` | Sets CSS `WebkitOverflowScrolling`. |
-| `WebkitTapHighlightColor` | Sets CSS `WebkitTapHighlightColor`. |
-| `WebkitUserSelect` | Sets CSS `WebkitUserSelect`. |
-| `alignSelf` | Sets CSS `alignSelf`. |
-| `area` | Sets CSS `gridArea`. |
-| `areas` | Sets CSS `gridTemplateAreas`. |
-| `backdropFilter` | Sets CSS `backdropFilter`. |
-| `background` | Sets CSS `background`. |
-| `borderObj` | Border as \{width, color, type?, radius?\}. Width carries its unit, e.g. "1px". |
-| `bottom` | Sets CSS `bottom`. |
-| `boxShadow` | Sets CSS `boxShadow`. |
-| `boxSizing` | Sets CSS `boxSizing`. |
 | `center` | Centres this element's CHILDREN. `true` for both axes, `"x"` horizontal, `"y"` vertical. Axis-aware: in a flex column `"y"` is justify-content, in a row it is align-items; a grid uses justify-items/align-items. To centre the element itself inside its parent, use `mar: "center"`. |
-| `color` | Sets CSS `color`. |
-| `cols` | Sets CSS `gridTemplateColumns`. |
-| `columnGap` | Sets CSS `columnGap`. |
-| `cursor` | Sets CSS `cursor`. |
-| `display` | Sets CSS `display`. |
-| `exact` | Sets CSS `fontSize`. |
-| `flex` | Sets CSS `flex`. |
-| `flexBasis` | Sets CSS `flexBasis`. |
-| `flexGrow` | Sets CSS `flexGrow`. |
-| `flexShrink` | Sets CSS `flexShrink`. |
-| `flexWrap` | Sets CSS `flexWrap`. |
-| `font` | Sets CSS `fontFamily`. |
-| `gap` | Sets CSS `gap`. |
-| `gridTemplateColumns` | Sets CSS `gridTemplateColumns`. |
-| `gridTemplateRows` | Sets CSS `gridTemplateRows`. |
-| `height` | Sets CSS `height`. |
-| `hide` | Hide the element without removing it from the tree. |
-| `hover` | Styles applied on hover, e.g. \{color, background, animation: "0.2s ease"\}. |
-| `inset` | Sets CSS `inset`. |
-| `keySet` | Escape hatch — \{key, value\} written straight to element.style, or an array of them. |
-| `left` | Sets CSS `left`. |
-| `letterSpacing` | Sets CSS `letterSpacing`. |
-| `lineHeight` | Sets CSS `lineHeight`. |
-| `mar` | Margin. The same array-of-side-objects form as `pad`: `mar: [{a: 40}]`, keys `a t r b l`, combinable. Additionally `mar: "center"` sets left and right to auto, as does `{a: "auto"}` or `{center: true}`. |
-| `maxHeight` | Sets CSS `maxHeight`. |
-| `maxWidth` | Sets CSS `maxWidth`. |
-| `minHeight` | Sets CSS `minHeight`. |
-| `minWidth` | Sets CSS `minWidth`. |
-| `noTheme` | Opt this element out of Theme.setDefaults light/dark colouring. |
-| `opacity` | Sets CSS `opacity`. |
-| `overflow` | Sets CSS `overflow`. |
-| `overflowWrap` | Sets CSS `overflowWrap`. |
-| `overflowX` | Sets CSS `overflowX`. |
-| `overflowY` | Sets CSS `overflowY`. |
-| `pad` | Padding. An array of side objects: `pad: [{a: 40}]`. Keys are `a` all, `t` top, `r` right, `b` bottom, `l` left. Keys combine, so `{tb: 12}` sets top and bottom. A bare number is treated as px; any string is passed through, so `{a: "2rem"}` works. |
-| `pointerEvents` | Sets CSS `pointerEvents`. |
-| `position` | Sets CSS `position`. |
-| `radius` | Sets CSS `borderRadius`. |
-| `raster` | Attach a WebGL raster pipeline. Array of op nodes; see the Raster section. |
-| `resmar` | Responsive margin — per-breakpoint overrides of `mar`, in the same form. |
-| `respad` | Responsive padding — per-breakpoint overrides of `pad`, in the same form. |
-| `resprop` | Per-breakpoint style overrides — [\{breakpoint, ...css\}]. `exact` is font size. |
-| `right` | Sets CSS `right`. |
-| `rowGap` | Sets CSS `rowGap`. |
-| `rows` | Sets CSS `gridTemplateRows`. |
-| `size` | Fluid type scale step (S1…S6) — font size that scales with the viewport. |
-| `textAlign` | Sets CSS `textAlign`. |
-| `textTransform` | Sets CSS `textTransform`. |
-| `theme` | Explicit light/dark overrides — \{light: \{...\}, dark: \{...\}\}. |
-| `top` | Sets CSS `top`. |
-| `transform` | A CSS transform string applied verbatim, or an object handled by reactOnTransform(). Composed with `scale` when both are given. |
-| `transition` | Sets CSS `transition`. |
-| `userSelect` | Sets CSS `userSelect`. |
-| `vars` | Custom CSS properties on this element — \{"--nod-split": 0.2\}. Custom properties inherit, so writing them on a root drives its whole subtree with one declaration; that is how the morph axes reach every generated element without a stylesheet. |
-| `whiteSpace` | Sets CSS `whiteSpace`. |
-| `width` | Sets CSS `width`. |
-| `wordBreak` | Sets CSS `wordBreak`. |
-| `wordWrap` | Sets CSS `wordWrap`. |
-| `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 
 ---
@@ -690,9 +475,11 @@ Path: /docs/api/picker
 
 | option | description |
 |---|---|
+| `background` | _undocumented_ |
 | `items` | The choices, each a `[value, text]` pair — or a plain string used as both. |
 | `label` | Accessible name for the control, written to `aria-label`; a select with no adjacent text has none otherwise. |
 | `name` | Field name submitted with the selected value. |
+| `radius` | _undocumented_ |
 | `title` | Accepted as a synonym for `label`, for parity with `labelInput`. |
 
 ## Inherited from Animator
@@ -701,81 +488,9 @@ Accepted by every component. Defined once in `animator.js`.
 
 | option | description |
 |---|---|
-| `WebkitBackdropFilter` | Sets CSS `WebkitBackdropFilter`. |
-| `WebkitOverflowScrolling` | Sets CSS `WebkitOverflowScrolling`. |
-| `WebkitTapHighlightColor` | Sets CSS `WebkitTapHighlightColor`. |
-| `WebkitUserSelect` | Sets CSS `WebkitUserSelect`. |
-| `alignSelf` | Sets CSS `alignSelf`. |
-| `area` | Sets CSS `gridArea`. |
-| `areas` | Sets CSS `gridTemplateAreas`. |
-| `backdropFilter` | Sets CSS `backdropFilter`. |
-| `background` | Sets CSS `background`. |
-| `borderObj` | Border as \{width, color, type?, radius?\}. Width carries its unit, e.g. "1px". |
-| `bottom` | Sets CSS `bottom`. |
-| `boxShadow` | Sets CSS `boxShadow`. |
-| `boxSizing` | Sets CSS `boxSizing`. |
 | `center` | Centres this element's CHILDREN. `true` for both axes, `"x"` horizontal, `"y"` vertical. Axis-aware: in a flex column `"y"` is justify-content, in a row it is align-items; a grid uses justify-items/align-items. To centre the element itself inside its parent, use `mar: "center"`. |
-| `color` | Sets CSS `color`. |
-| `cols` | Sets CSS `gridTemplateColumns`. |
-| `columnGap` | Sets CSS `columnGap`. |
-| `cursor` | Sets CSS `cursor`. |
-| `display` | Sets CSS `display`. |
-| `exact` | Sets CSS `fontSize`. |
-| `flex` | Sets CSS `flex`. |
-| `flexBasis` | Sets CSS `flexBasis`. |
-| `flexGrow` | Sets CSS `flexGrow`. |
-| `flexShrink` | Sets CSS `flexShrink`. |
-| `flexWrap` | Sets CSS `flexWrap`. |
-| `font` | Sets CSS `fontFamily`. |
-| `gap` | Sets CSS `gap`. |
-| `gridTemplateColumns` | Sets CSS `gridTemplateColumns`. |
-| `gridTemplateRows` | Sets CSS `gridTemplateRows`. |
-| `height` | Sets CSS `height`. |
-| `hide` | Hide the element without removing it from the tree. |
-| `hover` | Styles applied on hover, e.g. \{color, background, animation: "0.2s ease"\}. |
-| `inset` | Sets CSS `inset`. |
-| `keySet` | Escape hatch — \{key, value\} written straight to element.style, or an array of them. |
-| `left` | Sets CSS `left`. |
-| `letterSpacing` | Sets CSS `letterSpacing`. |
-| `lineHeight` | Sets CSS `lineHeight`. |
-| `mar` | Margin. The same array-of-side-objects form as `pad`: `mar: [{a: 40}]`, keys `a t r b l`, combinable. Additionally `mar: "center"` sets left and right to auto, as does `{a: "auto"}` or `{center: true}`. |
-| `maxHeight` | Sets CSS `maxHeight`. |
-| `maxWidth` | Sets CSS `maxWidth`. |
-| `minHeight` | Sets CSS `minHeight`. |
-| `minWidth` | Sets CSS `minWidth`. |
-| `noTheme` | Opt this element out of Theme.setDefaults light/dark colouring. |
-| `opacity` | Sets CSS `opacity`. |
-| `overflow` | Sets CSS `overflow`. |
-| `overflowWrap` | Sets CSS `overflowWrap`. |
-| `overflowX` | Sets CSS `overflowX`. |
-| `overflowY` | Sets CSS `overflowY`. |
-| `pad` | Padding. An array of side objects: `pad: [{a: 40}]`. Keys are `a` all, `t` top, `r` right, `b` bottom, `l` left. Keys combine, so `{tb: 12}` sets top and bottom. A bare number is treated as px; any string is passed through, so `{a: "2rem"}` works. |
-| `pointerEvents` | Sets CSS `pointerEvents`. |
-| `position` | Sets CSS `position`. |
-| `radius` | Sets CSS `borderRadius`. |
-| `raster` | Attach a WebGL raster pipeline. Array of op nodes; see the Raster section. |
-| `resmar` | Responsive margin — per-breakpoint overrides of `mar`, in the same form. |
-| `respad` | Responsive padding — per-breakpoint overrides of `pad`, in the same form. |
-| `resprop` | Per-breakpoint style overrides — [\{breakpoint, ...css\}]. `exact` is font size. |
-| `right` | Sets CSS `right`. |
-| `rowGap` | Sets CSS `rowGap`. |
-| `rows` | Sets CSS `gridTemplateRows`. |
-| `size` | Fluid type scale step (S1…S6) — font size that scales with the viewport. |
-| `textAlign` | Sets CSS `textAlign`. |
-| `textTransform` | Sets CSS `textTransform`. |
-| `theme` | Explicit light/dark overrides — \{light: \{...\}, dark: \{...\}\}. |
-| `top` | Sets CSS `top`. |
-| `transform` | A CSS transform string applied verbatim, or an object handled by reactOnTransform(). Composed with `scale` when both are given. |
-| `transition` | Sets CSS `transition`. |
-| `userSelect` | Sets CSS `userSelect`. |
-| `vars` | Custom CSS properties on this element — \{"--nod-split": 0.2\}. Custom properties inherit, so writing them on a root drives its whole subtree with one declaration; that is how the morph axes reach every generated element without a stylesheet. |
-| `whiteSpace` | Sets CSS `whiteSpace`. |
-| `width` | Sets CSS `width`. |
-| `wordBreak` | Sets CSS `wordBreak`. |
-| `wordWrap` | Sets CSS `wordWrap`. |
-| `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 
 ---
@@ -796,25 +511,34 @@ Path: /docs/api/text
 | `align` | _undocumented_ |
 | `alt` | Description for an icon that carries meaning; omit for decoration. |
 | `animation` | _undocumented_ |
+| `area` | _undocumented_ |
+| `background` | _undocumented_ |
 | `backgroundOp` | _undocumented_ |
 | `block` | _undocumented_ |
 | `border` | _undocumented_ |
 | `breakWord` | Allow long words to wrap mid-word (word-wrap: break-word). |
 | `clampc` | _undocumented_ |
 | `class` | _undocumented_ |
+| `color` | _undocumented_ |
 | `em` | _undocumented_ |
+| `exact` | _undocumented_ |
 | `filtera` | _undocumented_ |
+| `flex` | _undocumented_ |
 | `fluid` | _undocumented_ |
 | `fluidc` | _undocumented_ |
+| `font` | _undocumented_ |
 | `gpos` | Grid placement — \{col, row\}, written to grid-column and grid-row. |
 | `gradient` | _undocumented_ |
+| `height` | _undocumented_ |
 | `icon` | _undocumented_ |
 | `id` | _undocumented_ |
 | `index` | _undocumented_ |
 | `initLetter` | _undocumented_ |
 | `italic` | _undocumented_ |
 | `layout` | _undocumented_ |
+| `left` | _undocumented_ |
 | `marginOp` | _undocumented_ |
+| `maxWidth` | _undocumented_ |
 | `onScroll` | _undocumented_ |
 | `onTap` | _undocumented_ |
 | `preffersId` | Prefer this id when the Designer emits code for the element. |
@@ -824,9 +548,11 @@ Path: /docs/api/text
 | `span` | _undocumented_ |
 | `stroke` | _undocumented_ |
 | `tag` | Heading level to render, independent of `size`/`fluid`. |
+| `top` | _undocumented_ |
 | `type` | _undocumented_ |
 | `url` | _undocumented_ |
 | `vtn` | _undocumented_ |
+| `width` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -834,81 +560,9 @@ Accepted by every component. Defined once in `animator.js`.
 
 | option | description |
 |---|---|
-| `WebkitBackdropFilter` | Sets CSS `WebkitBackdropFilter`. |
-| `WebkitOverflowScrolling` | Sets CSS `WebkitOverflowScrolling`. |
-| `WebkitTapHighlightColor` | Sets CSS `WebkitTapHighlightColor`. |
-| `WebkitUserSelect` | Sets CSS `WebkitUserSelect`. |
-| `alignSelf` | Sets CSS `alignSelf`. |
-| `area` | Sets CSS `gridArea`. |
-| `areas` | Sets CSS `gridTemplateAreas`. |
-| `backdropFilter` | Sets CSS `backdropFilter`. |
-| `background` | Sets CSS `background`. |
-| `borderObj` | Border as \{width, color, type?, radius?\}. Width carries its unit, e.g. "1px". |
-| `bottom` | Sets CSS `bottom`. |
-| `boxShadow` | Sets CSS `boxShadow`. |
-| `boxSizing` | Sets CSS `boxSizing`. |
 | `center` | Centres this element's CHILDREN. `true` for both axes, `"x"` horizontal, `"y"` vertical. Axis-aware: in a flex column `"y"` is justify-content, in a row it is align-items; a grid uses justify-items/align-items. To centre the element itself inside its parent, use `mar: "center"`. |
-| `color` | Sets CSS `color`. |
-| `cols` | Sets CSS `gridTemplateColumns`. |
-| `columnGap` | Sets CSS `columnGap`. |
-| `cursor` | Sets CSS `cursor`. |
-| `display` | Sets CSS `display`. |
-| `exact` | Sets CSS `fontSize`. |
-| `flex` | Sets CSS `flex`. |
-| `flexBasis` | Sets CSS `flexBasis`. |
-| `flexGrow` | Sets CSS `flexGrow`. |
-| `flexShrink` | Sets CSS `flexShrink`. |
-| `flexWrap` | Sets CSS `flexWrap`. |
-| `font` | Sets CSS `fontFamily`. |
-| `gap` | Sets CSS `gap`. |
-| `gridTemplateColumns` | Sets CSS `gridTemplateColumns`. |
-| `gridTemplateRows` | Sets CSS `gridTemplateRows`. |
-| `height` | Sets CSS `height`. |
-| `hide` | Hide the element without removing it from the tree. |
-| `hover` | Styles applied on hover, e.g. \{color, background, animation: "0.2s ease"\}. |
-| `inset` | Sets CSS `inset`. |
-| `keySet` | Escape hatch — \{key, value\} written straight to element.style, or an array of them. |
-| `left` | Sets CSS `left`. |
-| `letterSpacing` | Sets CSS `letterSpacing`. |
-| `lineHeight` | Sets CSS `lineHeight`. |
-| `mar` | Margin. The same array-of-side-objects form as `pad`: `mar: [{a: 40}]`, keys `a t r b l`, combinable. Additionally `mar: "center"` sets left and right to auto, as does `{a: "auto"}` or `{center: true}`. |
-| `maxHeight` | Sets CSS `maxHeight`. |
-| `maxWidth` | Sets CSS `maxWidth`. |
-| `minHeight` | Sets CSS `minHeight`. |
-| `minWidth` | Sets CSS `minWidth`. |
-| `noTheme` | Opt this element out of Theme.setDefaults light/dark colouring. |
-| `opacity` | Sets CSS `opacity`. |
-| `overflow` | Sets CSS `overflow`. |
-| `overflowWrap` | Sets CSS `overflowWrap`. |
-| `overflowX` | Sets CSS `overflowX`. |
-| `overflowY` | Sets CSS `overflowY`. |
-| `pad` | Padding. An array of side objects: `pad: [{a: 40}]`. Keys are `a` all, `t` top, `r` right, `b` bottom, `l` left. Keys combine, so `{tb: 12}` sets top and bottom. A bare number is treated as px; any string is passed through, so `{a: "2rem"}` works. |
-| `pointerEvents` | Sets CSS `pointerEvents`. |
-| `position` | Sets CSS `position`. |
-| `radius` | Sets CSS `borderRadius`. |
-| `raster` | Attach a WebGL raster pipeline. Array of op nodes; see the Raster section. |
-| `resmar` | Responsive margin — per-breakpoint overrides of `mar`, in the same form. |
-| `respad` | Responsive padding — per-breakpoint overrides of `pad`, in the same form. |
-| `resprop` | Per-breakpoint style overrides — [\{breakpoint, ...css\}]. `exact` is font size. |
-| `right` | Sets CSS `right`. |
-| `rowGap` | Sets CSS `rowGap`. |
-| `rows` | Sets CSS `gridTemplateRows`. |
-| `size` | Fluid type scale step (S1…S6) — font size that scales with the viewport. |
-| `textAlign` | Sets CSS `textAlign`. |
-| `textTransform` | Sets CSS `textTransform`. |
-| `theme` | Explicit light/dark overrides — \{light: \{...\}, dark: \{...\}\}. |
-| `top` | Sets CSS `top`. |
-| `transform` | A CSS transform string applied verbatim, or an object handled by reactOnTransform(). Composed with `scale` when both are given. |
-| `transition` | Sets CSS `transition`. |
-| `userSelect` | Sets CSS `userSelect`. |
-| `vars` | Custom CSS properties on this element — \{"--nod-split": 0.2\}. Custom properties inherit, so writing them on a root drives its whole subtree with one declaration; that is how the morph axes reach every generated element without a stylesheet. |
-| `whiteSpace` | Sets CSS `whiteSpace`. |
-| `width` | Sets CSS `width`. |
-| `wordBreak` | Sets CSS `wordBreak`. |
-| `wordWrap` | Sets CSS `wordWrap`. |
-| `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 
 ---
@@ -925,11 +579,17 @@ Path: /docs/api/textfield
 
 | option | description |
 |---|---|
+| `background` | _undocumented_ |
 | `bold` | Shorthand for font-weight bold. Overrides `weight` if both are given. |
+| `color` | _undocumented_ |
+| `exact` | Font size as an exact CSS length, e.g. "0.875rem". |
+| `font` | _undocumented_ |
 | `id` | _undocumented_ |
 | `label` | _undocumented_ |
+| `maxWidth` | _undocumented_ |
 | `name` | _undocumented_ |
 | `placeholder` | Placeholder text shown while the field is empty. |
+| `radius` | Corner radius in pixels. A bare number, not a CSS length. |
 | `required` | _undocumented_ |
 | `title` | _undocumented_ |
 | `type` | Input type attribute. Defaults to "text"; "search" adds the native clear button. |
@@ -941,81 +601,9 @@ Accepted by every component. Defined once in `animator.js`.
 
 | option | description |
 |---|---|
-| `WebkitBackdropFilter` | Sets CSS `WebkitBackdropFilter`. |
-| `WebkitOverflowScrolling` | Sets CSS `WebkitOverflowScrolling`. |
-| `WebkitTapHighlightColor` | Sets CSS `WebkitTapHighlightColor`. |
-| `WebkitUserSelect` | Sets CSS `WebkitUserSelect`. |
-| `alignSelf` | Sets CSS `alignSelf`. |
-| `area` | Sets CSS `gridArea`. |
-| `areas` | Sets CSS `gridTemplateAreas`. |
-| `backdropFilter` | Sets CSS `backdropFilter`. |
-| `background` | Sets CSS `background`. |
-| `borderObj` | Border as \{width, color, type?, radius?\}. Width carries its unit, e.g. "1px". |
-| `bottom` | Sets CSS `bottom`. |
-| `boxShadow` | Sets CSS `boxShadow`. |
-| `boxSizing` | Sets CSS `boxSizing`. |
 | `center` | Centres this element's CHILDREN. `true` for both axes, `"x"` horizontal, `"y"` vertical. Axis-aware: in a flex column `"y"` is justify-content, in a row it is align-items; a grid uses justify-items/align-items. To centre the element itself inside its parent, use `mar: "center"`. |
-| `color` | Sets CSS `color`. |
-| `cols` | Sets CSS `gridTemplateColumns`. |
-| `columnGap` | Sets CSS `columnGap`. |
-| `cursor` | Sets CSS `cursor`. |
-| `display` | Sets CSS `display`. |
-| `exact` | Sets CSS `fontSize`. |
-| `flex` | Sets CSS `flex`. |
-| `flexBasis` | Sets CSS `flexBasis`. |
-| `flexGrow` | Sets CSS `flexGrow`. |
-| `flexShrink` | Sets CSS `flexShrink`. |
-| `flexWrap` | Sets CSS `flexWrap`. |
-| `font` | Sets CSS `fontFamily`. |
-| `gap` | Sets CSS `gap`. |
-| `gridTemplateColumns` | Sets CSS `gridTemplateColumns`. |
-| `gridTemplateRows` | Sets CSS `gridTemplateRows`. |
-| `height` | Sets CSS `height`. |
-| `hide` | Hide the element without removing it from the tree. |
-| `hover` | Styles applied on hover, e.g. \{color, background, animation: "0.2s ease"\}. |
-| `inset` | Sets CSS `inset`. |
-| `keySet` | Escape hatch — \{key, value\} written straight to element.style, or an array of them. |
-| `left` | Sets CSS `left`. |
-| `letterSpacing` | Sets CSS `letterSpacing`. |
-| `lineHeight` | Sets CSS `lineHeight`. |
-| `mar` | Margin. The same array-of-side-objects form as `pad`: `mar: [{a: 40}]`, keys `a t r b l`, combinable. Additionally `mar: "center"` sets left and right to auto, as does `{a: "auto"}` or `{center: true}`. |
-| `maxHeight` | Sets CSS `maxHeight`. |
-| `maxWidth` | Sets CSS `maxWidth`. |
-| `minHeight` | Sets CSS `minHeight`. |
-| `minWidth` | Sets CSS `minWidth`. |
-| `noTheme` | Opt this element out of Theme.setDefaults light/dark colouring. |
-| `opacity` | Sets CSS `opacity`. |
-| `overflow` | Sets CSS `overflow`. |
-| `overflowWrap` | Sets CSS `overflowWrap`. |
-| `overflowX` | Sets CSS `overflowX`. |
-| `overflowY` | Sets CSS `overflowY`. |
-| `pad` | Padding. An array of side objects: `pad: [{a: 40}]`. Keys are `a` all, `t` top, `r` right, `b` bottom, `l` left. Keys combine, so `{tb: 12}` sets top and bottom. A bare number is treated as px; any string is passed through, so `{a: "2rem"}` works. |
-| `pointerEvents` | Sets CSS `pointerEvents`. |
-| `position` | Sets CSS `position`. |
-| `radius` | Sets CSS `borderRadius`. |
-| `raster` | Attach a WebGL raster pipeline. Array of op nodes; see the Raster section. |
-| `resmar` | Responsive margin — per-breakpoint overrides of `mar`, in the same form. |
-| `respad` | Responsive padding — per-breakpoint overrides of `pad`, in the same form. |
-| `resprop` | Per-breakpoint style overrides — [\{breakpoint, ...css\}]. `exact` is font size. |
-| `right` | Sets CSS `right`. |
-| `rowGap` | Sets CSS `rowGap`. |
-| `rows` | Sets CSS `gridTemplateRows`. |
-| `size` | Fluid type scale step (S1…S6) — font size that scales with the viewport. |
-| `textAlign` | Sets CSS `textAlign`. |
-| `textTransform` | Sets CSS `textTransform`. |
-| `theme` | Explicit light/dark overrides — \{light: \{...\}, dark: \{...\}\}. |
-| `top` | Sets CSS `top`. |
-| `transform` | A CSS transform string applied verbatim, or an object handled by reactOnTransform(). Composed with `scale` when both are given. |
-| `transition` | Sets CSS `transition`. |
-| `userSelect` | Sets CSS `userSelect`. |
-| `vars` | Custom CSS properties on this element — \{"--nod-split": 0.2\}. Custom properties inherit, so writing them on a root drives its whole subtree with one declaration; that is how the morph axes reach every generated element without a stylesheet. |
-| `whiteSpace` | Sets CSS `whiteSpace`. |
-| `width` | Sets CSS `width`. |
-| `wordBreak` | Sets CSS `wordBreak`. |
-| `wordWrap` | Sets CSS `wordWrap`. |
-| `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 
 ---
@@ -1033,6 +621,7 @@ Path: /docs/api/ulist
 | option | description |
 |---|---|
 | `animation` | _undocumented_ |
+| `background` | _undocumented_ |
 | `backgroundOp` | _undocumented_ |
 | `filtera` | _undocumented_ |
 | `gradient` | _undocumented_ |
@@ -1048,81 +637,9 @@ Accepted by every component. Defined once in `animator.js`.
 
 | option | description |
 |---|---|
-| `WebkitBackdropFilter` | Sets CSS `WebkitBackdropFilter`. |
-| `WebkitOverflowScrolling` | Sets CSS `WebkitOverflowScrolling`. |
-| `WebkitTapHighlightColor` | Sets CSS `WebkitTapHighlightColor`. |
-| `WebkitUserSelect` | Sets CSS `WebkitUserSelect`. |
-| `alignSelf` | Sets CSS `alignSelf`. |
-| `area` | Sets CSS `gridArea`. |
-| `areas` | Sets CSS `gridTemplateAreas`. |
-| `backdropFilter` | Sets CSS `backdropFilter`. |
-| `background` | Sets CSS `background`. |
-| `borderObj` | Border as \{width, color, type?, radius?\}. Width carries its unit, e.g. "1px". |
-| `bottom` | Sets CSS `bottom`. |
-| `boxShadow` | Sets CSS `boxShadow`. |
-| `boxSizing` | Sets CSS `boxSizing`. |
 | `center` | Centres this element's CHILDREN. `true` for both axes, `"x"` horizontal, `"y"` vertical. Axis-aware: in a flex column `"y"` is justify-content, in a row it is align-items; a grid uses justify-items/align-items. To centre the element itself inside its parent, use `mar: "center"`. |
-| `color` | Sets CSS `color`. |
-| `cols` | Sets CSS `gridTemplateColumns`. |
-| `columnGap` | Sets CSS `columnGap`. |
-| `cursor` | Sets CSS `cursor`. |
-| `display` | Sets CSS `display`. |
-| `exact` | Sets CSS `fontSize`. |
-| `flex` | Sets CSS `flex`. |
-| `flexBasis` | Sets CSS `flexBasis`. |
-| `flexGrow` | Sets CSS `flexGrow`. |
-| `flexShrink` | Sets CSS `flexShrink`. |
-| `flexWrap` | Sets CSS `flexWrap`. |
-| `font` | Sets CSS `fontFamily`. |
-| `gap` | Sets CSS `gap`. |
-| `gridTemplateColumns` | Sets CSS `gridTemplateColumns`. |
-| `gridTemplateRows` | Sets CSS `gridTemplateRows`. |
-| `height` | Sets CSS `height`. |
-| `hide` | Hide the element without removing it from the tree. |
-| `hover` | Styles applied on hover, e.g. \{color, background, animation: "0.2s ease"\}. |
-| `inset` | Sets CSS `inset`. |
-| `keySet` | Escape hatch — \{key, value\} written straight to element.style, or an array of them. |
-| `left` | Sets CSS `left`. |
-| `letterSpacing` | Sets CSS `letterSpacing`. |
-| `lineHeight` | Sets CSS `lineHeight`. |
-| `mar` | Margin. The same array-of-side-objects form as `pad`: `mar: [{a: 40}]`, keys `a t r b l`, combinable. Additionally `mar: "center"` sets left and right to auto, as does `{a: "auto"}` or `{center: true}`. |
-| `maxHeight` | Sets CSS `maxHeight`. |
-| `maxWidth` | Sets CSS `maxWidth`. |
-| `minHeight` | Sets CSS `minHeight`. |
-| `minWidth` | Sets CSS `minWidth`. |
-| `noTheme` | Opt this element out of Theme.setDefaults light/dark colouring. |
-| `opacity` | Sets CSS `opacity`. |
-| `overflow` | Sets CSS `overflow`. |
-| `overflowWrap` | Sets CSS `overflowWrap`. |
-| `overflowX` | Sets CSS `overflowX`. |
-| `overflowY` | Sets CSS `overflowY`. |
-| `pad` | Padding. An array of side objects: `pad: [{a: 40}]`. Keys are `a` all, `t` top, `r` right, `b` bottom, `l` left. Keys combine, so `{tb: 12}` sets top and bottom. A bare number is treated as px; any string is passed through, so `{a: "2rem"}` works. |
-| `pointerEvents` | Sets CSS `pointerEvents`. |
-| `position` | Sets CSS `position`. |
-| `radius` | Sets CSS `borderRadius`. |
-| `raster` | Attach a WebGL raster pipeline. Array of op nodes; see the Raster section. |
-| `resmar` | Responsive margin — per-breakpoint overrides of `mar`, in the same form. |
-| `respad` | Responsive padding — per-breakpoint overrides of `pad`, in the same form. |
-| `resprop` | Per-breakpoint style overrides — [\{breakpoint, ...css\}]. `exact` is font size. |
-| `right` | Sets CSS `right`. |
-| `rowGap` | Sets CSS `rowGap`. |
-| `rows` | Sets CSS `gridTemplateRows`. |
-| `size` | Fluid type scale step (S1…S6) — font size that scales with the viewport. |
-| `textAlign` | Sets CSS `textAlign`. |
-| `textTransform` | Sets CSS `textTransform`. |
-| `theme` | Explicit light/dark overrides — \{light: \{...\}, dark: \{...\}\}. |
-| `top` | Sets CSS `top`. |
-| `transform` | A CSS transform string applied verbatim, or an object handled by reactOnTransform(). Composed with `scale` when both are given. |
-| `transition` | Sets CSS `transition`. |
-| `userSelect` | Sets CSS `userSelect`. |
-| `vars` | Custom CSS properties on this element — \{"--nod-split": 0.2\}. Custom properties inherit, so writing them on a root drives its whole subtree with one declaration; that is how the morph axes reach every generated element without a stylesheet. |
-| `whiteSpace` | Sets CSS `whiteSpace`. |
-| `width` | Sets CSS `width`. |
-| `wordBreak` | Sets CSS `wordBreak`. |
-| `wordWrap` | Sets CSS `wordWrap`. |
-| `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 
 ---
@@ -1141,14 +658,17 @@ Path: /docs/api/wrapper
 |---|---|
 | `align` | _undocumented_ |
 | `animation` | _undocumented_ |
+| `area` | _undocumented_ |
 | `at` | _undocumented_ |
 | `backTo` | _undocumented_ |
+| `background` | _undocumented_ |
 | `backgroundOp` | _undocumented_ |
 | `blast` | _undocumented_ |
 | `border` | _undocumented_ |
 | `borderObja` | _undocumented_ |
 | `centerColumn` | _undocumented_ |
 | `class` | _undocumented_ |
+| `color` | _undocumented_ |
 | `column` | _undocumented_ |
 | `customAlign` | align-items, verbatim — for values `align` does not cover. |
 | `customJustify` | justify-items, verbatim. |
@@ -1157,16 +677,24 @@ Path: /docs/api/wrapper
 | `filtera` | _undocumented_ |
 | `flexCenter` | _undocumented_ |
 | `flexDir` | Flex direction. Also sets display:flex, so it is enough on its own. |
+| `font` | _undocumented_ |
 | `ga` | CSS grid-area, verbatim. |
 | `gpos` | Grid placement — \{col, row\}, written to grid-column and grid-row. |
 | `gradient` | _undocumented_ |
+| `height` | _undocumented_ |
 | `id` | _undocumented_ |
 | `isHidden` | Hide the element. |
 | `layout` | _undocumented_ |
 | `makeResponsiveBehaviour` | _undocumented_ |
 | `marginOp` | _undocumented_ |
+| `maxHeight` | _undocumented_ |
+| `maxWidth` | _undocumented_ |
 | `name` | _undocumented_ |
 | `onTap` | _undocumented_ |
+| `opacity` | _undocumented_ |
+| `overflow` | _undocumented_ |
+| `position` | _undocumented_ |
+| `radius` | _undocumented_ |
 | `ranges` | _undocumented_ |
 | `responsive` | _undocumented_ |
 | `scale` | _undocumented_ |
@@ -1178,7 +706,11 @@ Path: /docs/api/wrapper
 | `sticky` | Stick to the top of the scroll container (position: sticky; top: 0). |
 | `stretch` | _undocumented_ |
 | `stroke` | _undocumented_ |
+| `top` | _undocumented_ |
+| `transition` | _undocumented_ |
 | `weight` | _undocumented_ |
+| `width` | _undocumented_ |
+| `zIndex` | _undocumented_ |
 
 ## Inherited from Animator
 
@@ -1186,81 +718,9 @@ Accepted by every component. Defined once in `animator.js`.
 
 | option | description |
 |---|---|
-| `WebkitBackdropFilter` | Sets CSS `WebkitBackdropFilter`. |
-| `WebkitOverflowScrolling` | Sets CSS `WebkitOverflowScrolling`. |
-| `WebkitTapHighlightColor` | Sets CSS `WebkitTapHighlightColor`. |
-| `WebkitUserSelect` | Sets CSS `WebkitUserSelect`. |
-| `alignSelf` | Sets CSS `alignSelf`. |
-| `area` | Sets CSS `gridArea`. |
-| `areas` | Sets CSS `gridTemplateAreas`. |
-| `backdropFilter` | Sets CSS `backdropFilter`. |
-| `background` | Sets CSS `background`. |
-| `borderObj` | Border as \{width, color, type?, radius?\}. Width carries its unit, e.g. "1px". |
-| `bottom` | Sets CSS `bottom`. |
-| `boxShadow` | Sets CSS `boxShadow`. |
-| `boxSizing` | Sets CSS `boxSizing`. |
 | `center` | Centres this element's CHILDREN. `true` for both axes, `"x"` horizontal, `"y"` vertical. Axis-aware: in a flex column `"y"` is justify-content, in a row it is align-items; a grid uses justify-items/align-items. To centre the element itself inside its parent, use `mar: "center"`. |
-| `color` | Sets CSS `color`. |
-| `cols` | Sets CSS `gridTemplateColumns`. |
-| `columnGap` | Sets CSS `columnGap`. |
-| `cursor` | Sets CSS `cursor`. |
-| `display` | Sets CSS `display`. |
-| `exact` | Sets CSS `fontSize`. |
-| `flex` | Sets CSS `flex`. |
-| `flexBasis` | Sets CSS `flexBasis`. |
-| `flexGrow` | Sets CSS `flexGrow`. |
-| `flexShrink` | Sets CSS `flexShrink`. |
-| `flexWrap` | Sets CSS `flexWrap`. |
-| `font` | Sets CSS `fontFamily`. |
-| `gap` | Sets CSS `gap`. |
-| `gridTemplateColumns` | Sets CSS `gridTemplateColumns`. |
-| `gridTemplateRows` | Sets CSS `gridTemplateRows`. |
-| `height` | Sets CSS `height`. |
-| `hide` | Hide the element without removing it from the tree. |
-| `hover` | Styles applied on hover, e.g. \{color, background, animation: "0.2s ease"\}. |
-| `inset` | Sets CSS `inset`. |
-| `keySet` | Escape hatch — \{key, value\} written straight to element.style, or an array of them. |
-| `left` | Sets CSS `left`. |
-| `letterSpacing` | Sets CSS `letterSpacing`. |
-| `lineHeight` | Sets CSS `lineHeight`. |
-| `mar` | Margin. The same array-of-side-objects form as `pad`: `mar: [{a: 40}]`, keys `a t r b l`, combinable. Additionally `mar: "center"` sets left and right to auto, as does `{a: "auto"}` or `{center: true}`. |
-| `maxHeight` | Sets CSS `maxHeight`. |
-| `maxWidth` | Sets CSS `maxWidth`. |
-| `minHeight` | Sets CSS `minHeight`. |
-| `minWidth` | Sets CSS `minWidth`. |
-| `noTheme` | Opt this element out of Theme.setDefaults light/dark colouring. |
-| `opacity` | Sets CSS `opacity`. |
-| `overflow` | Sets CSS `overflow`. |
-| `overflowWrap` | Sets CSS `overflowWrap`. |
-| `overflowX` | Sets CSS `overflowX`. |
-| `overflowY` | Sets CSS `overflowY`. |
-| `pad` | Padding. An array of side objects: `pad: [{a: 40}]`. Keys are `a` all, `t` top, `r` right, `b` bottom, `l` left. Keys combine, so `{tb: 12}` sets top and bottom. A bare number is treated as px; any string is passed through, so `{a: "2rem"}` works. |
-| `pointerEvents` | Sets CSS `pointerEvents`. |
-| `position` | Sets CSS `position`. |
-| `radius` | Sets CSS `borderRadius`. |
-| `raster` | Attach a WebGL raster pipeline. Array of op nodes; see the Raster section. |
-| `resmar` | Responsive margin — per-breakpoint overrides of `mar`, in the same form. |
-| `respad` | Responsive padding — per-breakpoint overrides of `pad`, in the same form. |
-| `resprop` | Per-breakpoint style overrides — [\{breakpoint, ...css\}]. `exact` is font size. |
-| `right` | Sets CSS `right`. |
-| `rowGap` | Sets CSS `rowGap`. |
-| `rows` | Sets CSS `gridTemplateRows`. |
-| `size` | Fluid type scale step (S1…S6) — font size that scales with the viewport. |
-| `textAlign` | Sets CSS `textAlign`. |
-| `textTransform` | Sets CSS `textTransform`. |
-| `theme` | Explicit light/dark overrides — \{light: \{...\}, dark: \{...\}\}. |
-| `top` | Sets CSS `top`. |
-| `transform` | A CSS transform string applied verbatim, or an object handled by reactOnTransform(). Composed with `scale` when both are given. |
-| `transition` | Sets CSS `transition`. |
-| `userSelect` | Sets CSS `userSelect`. |
-| `vars` | Custom CSS properties on this element — \{"--nod-split": 0.2\}. Custom properties inherit, so writing them on a root drives its whole subtree with one declaration; that is how the morph axes reach every generated element without a stylesheet. |
-| `whiteSpace` | Sets CSS `whiteSpace`. |
-| `width` | Sets CSS `width`. |
-| `wordBreak` | Sets CSS `wordBreak`. |
-| `wordWrap` | Sets CSS `wordWrap`. |
-| `zIndex` | Sets CSS `zIndex`. |
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 
 ---
@@ -1340,7 +800,7 @@ To use Nodality with CDN, use this code:
 <script type="module">
     import {
         Des
-    } from "https://www.unpkg.com/nodality@1.3.3/dist/index.esm.js";
+    } from "https://www.unpkg.com/nodality@1.4.0/dist/index.esm.js";
 
     let elements = [{
         type: "h1",
@@ -1576,6 +1036,13 @@ Path: /docs/basics/start
 # Getting started 
  This library works with *elements* represented as an array of HTML entities, and *nodes* that control the behavior of elements.
 
+:::tip Built for agents
+Nodality is written by people **and by coding agents**. One command –
+`npx nodality skill` – sets up Claude Code or Cursor with the Nodality skill
+and an MCP server that checks every page before it renders.
+[Agents – getting started →](../agents/start.md)
+:::
+
 **Elements** is an array of objects. This array produces the code of elements you can use in your website. 
 
 **Nodes** is another array containing nodes that change the look and behavior of the generated elements.
@@ -1646,7 +1113,7 @@ Here is the entire code using CDN:
 <div id="#mount"></div>
 
 <script type="module">
-import {Des} from "https://www.unpkg.com/nodality@1.3.3/dist/index.esm.js";
+import {Des} from "https://www.unpkg.com/nodality@1.4.0/dist/index.esm.js";
 
 let elements = [
     {
@@ -1708,7 +1175,7 @@ Use the ```render``` method, where ```#mount``` is a ```div``` element that will
 <div id="mount"></div>
 
 <script type="module">
-import {Des} from "https://www.unpkg.com/nodality@1.3.3/dist/index.esm.js";
+import {Des} from "https://www.unpkg.com/nodality@1.4.0/dist/index.esm.js";
 
 new Text("Hello")
  .set({
@@ -2566,87 +2033,77 @@ This code generates the ```Modal``` instance and open/close button.
 Path: /docs/elements/navigation
 
 # Navigation
-To create a simple navigation use ```nav``` element
-
+To create a site navigation use the `nav` element. It shows the full bar on wide screens and collapses the links behind a menu button below its breakpoint.
 
 ```js
-let elements = [
+const elements = [
   {
-    type: "nav"
-  }
+    type: "nav", id: "nav",
+    brand: "Acme",                        // or an element spec: { type: "p", text, keySet, … }
+    items: [
+      { title: "Work", link: "#work" },
+      { title: "About", link: "#about" },
+      { title: "Contact", link: "#contact" },
+    ],
+    breakpoint: 768,                      // the full bar from here up (default "1200px")
+    font: "Inter", color: "#111",
+    hover: { color: "#b83a0b" },
+    background: "rgba(255, 255, 255, 0.8)",
+    radius: "14px",
+    mar: [{ a: 0 }], pad: [{ tb: 12, lr: 24 }],
+    keySet: [{ key: "backdropFilter", value: "blur(20px)" }],
+    menuLabel: "Menu",
+  },
 ];
 ```
 
+### Options
 
-This code generates the ```MultiSwitcher``` instance. Which contains classes:
-*  ```BetaMobileBar``` for mobile navigation
-*  ```BetaDesktopBar``` for desktop navigation
+| option | what it does |
+|---|---|
+| `items` | The links, each `{ title, link }` or a plain string. Declaring them is what builds the nav from these options. |
+| `brand` | The name at the start of the bar — a string, or an element spec for full control of its type. |
+| `breakpoint` | Width from which the full bar shows; below it the links collapse behind the menu button. A number is px. Default `"1200px"`. |
+| `font`, `color` | The links' font and colour (and a string brand's). `color` also colours the menu button unless `hamburgerColour` is given. |
+| `hover` | Link hover styles, as on `a`. |
+| `background`, `radius`, `mar`, `pad` | The bar itself. Default margin `[{a: 21}]`; pass `[{a: 0}]` when a wrapper positions the bar. |
+| `keySet` | Extra CSS on the bar, desktop and mobile — e.g. `backdropFilter`, `boxShadow`, `fontSize`. |
+| `hamburgerColour` | Colour of the menu button. |
+| `menuLabel` | Accessible name of the menu button. Default `"Menu"`. |
 
-### Arguments:
-* ```hamburgerColour``` - colour of hamburger
-* ```radius``` - border radius
-* ```brand``` - navigation branding. You can use any view you want.
+`get_schema nav` lists each of these with its shape, and `validate_nodes` checks them.
+
+### Behaviour
+
+- The menu button is a real `<button>` with an accessible name and `aria-expanded`; it names the menu it controls.
+- Following a link closes the menu, so on a one-page site the menu does not cover the section it just scrolled to.
+- Prerendered pages carry the nav — as its phone view, at the prerenderer's emulated phone width — so crawlers and readers without JavaScript get the links.
+- To fix the bar to the top, wrap it: `{ type: "wrap", keySet: [{ key: "position", value: "fixed" }, …], children: [{ type: "nav", … }] }`.
+
+A `nav` declared **without** `items` renders the library's demo navigation (placeholder brand, links and a "More" dropdown), unchanged from earlier versions.
+
+### The imperative form
+
+The data form builds these classes; you can also use them directly. `Switcher` chooses a view by width; `MobileBar` and `DesktopBar` are the two views.
 
 ```js
-new MultiSwitcher().set({
-    breakpoints: [{
-            at: "0px",
-            view: new MobileBar().set({
-                background: "#ecf0f1",
-                mar: [{
-                    a: 21
-                }],
-                brand: new Text("Company").set({
-                    size: "S1"
-                }),
-                hamburgerColour: "#3498db",
-                radius: "1rem"
-            }).add([
-                new Link().set({
-                    url: "#A",
-                    text: "A",
-                }),
-
-                //......
-
-            ]),
-        },
-        {
-            at: "1200px",
-            view: new DesktopBar().set({
-                background: "#ecf0f1",
-                mar: [{
-                    a: 21
-                }],
-                maxHeight: "100px",
-                radius: "1rem"
-            }).add([
-                new Text("Company").set({
-                    size: "S1"
-                }), new Spacer(true),
-                new Link().set({
-                    url: "#A",
-                    text: "Desktop bar",
-                }), new Link().set({
-                    url: "#B",
-                    text: "B",
-                }), new Link().set({
-                    url: "#C",
-                    text: "C",
-                })
-
-                //....
-
-
-
-
-            ])
-
-        },
-
-    ]
+new Switcher().set({
+  id: "nav",
+  breakpoints: [
+    { at: "0px", view: new MobileBar().set({
+        background: "#ecf0f1", radius: "1rem", hamburgerColour: "#111",
+        brand: new Text("Acme").set({ size: "S6" }),
+      }).add([
+        new Link().set({ url: "#work", text: "Work" }),
+        new Link().set({ url: "#about", text: "About" }),
+      ]) },
+    { at: "1200px", view: new DesktopBar().set({ background: "#ecf0f1", radius: "1rem" }).add([
+        new Text("Acme").set({ size: "S6" }), new Spacer(true),
+        new Link().set({ url: "#work", text: "Work" }),
+        new Link().set({ url: "#about", text: "About" }),
+      ]) },
+  ],
 }).render("#mount");
-
 ```
 
 
@@ -4828,81 +4285,101 @@ You can easily integrate this library with React.js and Vue.js libraries.
 
 
 ## React integration
-To quickly scaffold a React app you can use:
+Nodality ships a React component: `import Nodality from "nodality/react"`
+(Nodality 1.3.25 and later, React 18 and later). It hosts a Nodality render
+inside your React tree, in either of the library's two forms.
+
+To start a new app with it already set up, including build-time prerendering:
 
 ```sh
 npx create-nodality-react@latest my-app
 ```
-You can use the ```Extracted``` component to integrate this library into your React application.
 
-Here, you can see a more complex example that fetches data from API a displays them in List.
-```js
-import logo from './logo.svg';
-import './App.css';
-import {Text, Wrapper} from "nodality";
-import {React} from "react";
-import {useState, useRef, useEffect} from "react";
+To add it to an existing React app, install `nodality` and import the component:
 
-function Extracted(props) {
-  let ref = useRef();
-
-  useEffect(() => {
-     let t = props.view;
-     ref.current.appendChild(t.render());
-     return () => {
-          if (ref.current) {
-              ref.current.innerHTML = "";
-          }
-      };
- }, [props]); 
- return <div ref={ref} />;
-}
-
-function Wrappera({ setIsNav }) {
-  const [count, setCount] = useState(0);
-  return (
-      <Extracted
-          view={
-              new Wrapper().set({ background: "orange" }).add([
-                  new Text(`Counter ${count}`)
-                      .set({
-                          fluidc: "S1",
-                          font: "Arial",
-                          onTap: () => {
-                              setCount(count + 1);
-                              setIsNav && setIsNav(false);
-                          }
-                      })
-              ])
-          }
-      />
-  );
-}
-
-function Final({ setIsNav }) {
-  return (
-      <>
-          <Wrappera />
-          <Wrappera setIsNav={setIsNav}/>
-          <Wrappera setIsNav={setIsNav}/>
-      </>
-  );
-}
-
-
-
-function App() {
-  return (
-    <div className="App">    
-        <Final/>
-  );
-}
-
-export default App;
-
+```sh
+npm install nodality
 ```
 
+### Component code you own: `view`
 
+Pass a function that returns a Nodality component, and the values it depends on
+in `deps`. The view is rebuilt when `deps` change, with the same meaning as
+`useEffect`'s dependency array, and not on every parent render.
+
+```jsx
+import { useState } from "react";
+import { Text, Wrapper } from "nodality";
+import Nodality from "nodality/react";
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <>
+      <Nodality
+        view={() =>
+          new Wrapper().set({ background: "#FFF7ED", pad: [{ a: "1rem" }] }).add([
+            new Text(`Count ${count}`).set({ size: "S5", color: "#9A3412" }),
+          ])
+        }
+        deps={[count]}
+      />
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </>
+  );
+}
+```
+
+A rebuild replaces the view's elements, so a field inside it loses focus when its
+`deps` change. Leave values that change on every keystroke out of `deps`.
+
+### A specification: `elements` and `nodes`
+
+Pass the `(E, N)` pair as data:
+
+```jsx
+import Nodality from "nodality/react";
+
+const elements = [
+  { type: "wrap", id: "hero", children: [
+    { type: "h1", id: "title", text: "Declared as data" },
+  ]},
+];
+const nodes = [
+  { op: "blast", target: ["title"], color: "#1D6FE0", width: "2px" },
+];
+
+export default function Hero() {
+  return <Nodality elements={elements} nodes={nodes} />;
+}
+```
+
+### The difference that matters
+
+Only a specification survives the build. Because it is data, the component writes
+it into the page next to its host (`<script type="application/json"
+data-nodality-for="…">`), and a prerenderer can render it to HTML at build time,
+so crawlers see real markup. `create-nodality-react` does this in its
+`npm run build`. A `view` is a function, so it renders in the browser only.
+
+### Props
+
+| Prop | Description |
+|---|---|
+| `view` | A function returning a Nodality component, e.g. `() => new Wrapper()…`. |
+| `deps` | When to rebuild `view`; same meaning as `useEffect`'s dependency array. |
+| `elements` | The specification's elements (E). |
+| `nodes` | The specification's nodes (N). |
+| `defs` | Definitions, passed to `Des.defs()`. |
+| `className`, `style` | Applied to the host `div`. |
+
+### Next.js
+
+`nodality/react` is marked `"use client"`, so it works in the Next.js App Router.
+A server component can render it with `elements` and `nodes`, because those are
+plain data. `view` is a function, and functions cannot be passed from a server
+component, so use `view` inside a client component.
 
 ## Vue.js integration
 You can also integrate this library with Vue.js. Here is the complete example.
@@ -5199,7 +4676,7 @@ npm run build && npm start
 
 
 ### Create Nodality React
-Nodality support React integration. For more see: [Integration](integration.md)
+Scaffolds a React + Vite app that uses the `nodality/react` component and prerenders specifications to HTML at build time. For more see: [Integration](integration.md)
 ```sh
 npx create-nodality-react my-app
 ```
@@ -6908,7 +6385,7 @@ step, no install. Save it as `index.html`, open it, and the nav transitions.
   <div id="mount"></div>
 
   <script type="module">
-    import { Des } from "https://www.unpkg.com/nodality@1.3.3/dist/index.esm.js";
+    import { Des } from "https://www.unpkg.com/nodality@1.4.0/dist/index.esm.js";
 
     // Each destination is an ordinary element with an id. The id is what the
     // morph node points at, and the back button is what unwinds the path.
@@ -7038,11 +6515,12 @@ below explain what the options mean.
 | `merge` | color | `mix` |
 | `noise` | field | `amount`, `remap`, `scale`, `speed` |
 | `offset` | warp | `radius`, `strength` |
+| `particles` | displace | `amount`, `reach`, `seed`, `size` |
 | `stir` | warp + color | `curl`, `decay`, `dye`, `dyeAmount`, `dyeFade`, `dyeResolution`, `force`, `intensity`, `pressure`, `pressureIterations`, `radius`, `rainbow`, `resolution`, `sheen`, `strength`, `tint` |
 
-15 ops, plus `switch`. Drivers: `static` `mouse` `hover` `scroll` `time`.
+16 ops, plus `switch`. Drivers: `static` `mouse` `hover` `scroll` `time`.
 
-Generated from nodality 1.3.3.
+Generated from nodality 1.4.0.
 
 <!-- /GENERATED:ops -->
 
