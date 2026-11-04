@@ -5127,13 +5127,13 @@ Path: /docs/nodes/arrange
 
 # Responsive – breakpoints from content
 
-*Experimental, opt-in. New in 1.4.0.*
-
 A row of three headings fits side by side on a laptop and overflows on a
 phone. The usual fix is a breakpoint at a device width – 768 px, say – that
 has nothing to do with this row: too early for short text, too late for long
 text. Nodality can instead **measure where the row stops fitting** and switch
 exactly there.
+
+*Experimental, opt-in. New in 1.4.0.*
 
 Two parts:
 
